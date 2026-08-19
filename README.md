@@ -12,6 +12,7 @@ The goal is not to collect tutorials or memorize PySpark syntax. The goal is to 
 
 - [Learning Philosophy](#learning-philosophy)
 - [Canonical Project Documents](#canonical-project-documents)
+- [Dependencies & Virtual Environment](#dependencies--virtual-environment)
 - [Curriculum](#curriculum)
 - [Phase Learning Model](#phase-learning-model)
 - [Phase README Standard](#phase-readme-standard)
@@ -117,6 +118,71 @@ Git repo      → Evidence of completed work
 `WORKFLOW.md` is not part of the active project model and should not be relied on.
 
 ---
+
+## Dependencies & Virtual Environment
+
+Project dependencies are declared in [`requirements.txt`](requirements.txt).
+
+The repository currently pins:
+
+```text
+pyspark==4.2.0
+```
+
+Use a project-local virtual environment so PySpark and future Python dependencies remain isolated from the system Python installation.
+
+### Create the virtual environment
+
+From the repository root:
+
+```powershell
+python -m venv .venv
+```
+
+### Activate it
+
+**Windows PowerShell**
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+**Windows Command Prompt**
+
+```cmd
+.venv\Scripts\activate.bat
+```
+
+**macOS / Linux**
+
+```bash
+source .venv/bin/activate
+```
+
+### Install dependencies
+
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### Verify the environment
+
+```powershell
+python -c "import sys; print(sys.executable)"
+python -c "import pyspark; print(pyspark.__version__)"
+```
+
+The Python executable should resolve inside `.venv`, and the PySpark version should match `requirements.txt`.
+
+### Deactivate
+
+```powershell
+deactivate
+```
+
+The `.venv/` directory is intentionally excluded from Git. Commit `requirements.txt`, not the local virtual environment.
+
 
 ## Curriculum
 

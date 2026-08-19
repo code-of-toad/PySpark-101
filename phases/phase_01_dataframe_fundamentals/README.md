@@ -75,7 +75,7 @@ from pyspark.sql import SparkSession
 
 spark = (
     SparkSession.builder
-    .appName("phase_01_retail")
+    .appName('phase_01_retail')
     .getOrCreate()
 )
 ```
@@ -98,13 +98,13 @@ From local Python data:
 
 ```python
 rows = [
-    (1001, " SKU-001 ", "12.99"),
-    (1002, "SKU-002", "8.50"),
+    (1001, ' SKU-001 ', '12.99'),
+    (1002, 'SKU-002', '8.50'),
 ]
 
 df = spark.createDataFrame(
     rows,
-    ["product_id", "sku", "unit_price_raw"],
+    ['product_id', 'sku', 'unit_price_raw'],
 )
 ```
 
@@ -119,9 +119,9 @@ from pyspark.sql.types import (
 )
 
 schema = StructType([
-    StructField("product_id", IntegerType(), nullable=False),
-    StructField("sku", StringType(), nullable=False),
-    StructField("unit_price_raw", StringType(), nullable=True),
+    StructField('product_id', IntegerType(), nullable=False),
+    StructField('sku', StringType(), nullable=False),
+    StructField('unit_price_raw', StringType(), nullable=True),
 ])
 
 df = spark.createDataFrame(rows, schema=schema)
@@ -150,8 +150,8 @@ Examples:
 ```python
 clean_df = (
     df
-    .filter("product_id IS NOT NULL")
-    .select("product_id", "sku")
+    .filter('product_id IS NOT NULL')
+    .select('product_id', 'sku')
 )
 ```
 
@@ -179,7 +179,7 @@ rows = clean_df.collect()
 Writes also trigger execution:
 
 ```python
-clean_df.write.mode("overwrite").parquet("data/curated/products")
+clean_df.write.mode('overwrite').parquet('data/curated/products')
 ```
 
 ### Lazy evaluation
@@ -187,8 +187,8 @@ clean_df.write.mode("overwrite").parquet("data/curated/products")
 Spark DataFrame transformations are lazy: Spark builds a logical plan as transformations are chained, then performs the work when an action requires a result.
 
 ```python
-filtered_df = df.filter("product_id > 1000")   # describes work
-selected_df = filtered_df.select("product_id") # extends the plan
+filtered_df = df.filter('product_id > 1000')   # describes work
+selected_df = filtered_df.select('product_id') # extends the plan
 
 selected_df.show()                             # triggers execution
 ```
@@ -251,10 +251,10 @@ from pyspark.sql.types import (
 )
 
 product_schema = StructType([
-    StructField("product_id", IntegerType(), nullable=False),
-    StructField("sku", StringType(), nullable=False),
-    StructField("product_name", StringType(), nullable=True),
-    StructField("unit_price", DecimalType(12, 2), nullable=True),
+    StructField('product_id', IntegerType(), nullable=False),
+    StructField('sku', StringType(), nullable=False),
+    StructField('product_name', StringType(), nullable=True),
+    StructField('unit_price', DecimalType(12, 2), nullable=True),
 ])
 ```
 
@@ -274,7 +274,7 @@ Treat nullability as part of the data contract, but do not confuse schema metada
 from pyspark.sql import functions as F
 
 invalid_required_df = df.filter(
-    F.col("product_id").isNull() | F.col("sku").isNull()
+    F.col('product_id').isNull() | F.col('sku').isNull()
 )
 ```
 
@@ -298,9 +298,9 @@ Benefits:
 ```python
 df = (
     spark.read
-    .option("header", True)
-    .option("inferSchema", True)
-    .csv("data/raw/products.csv")
+    .option('header', True)
+    .option('inferSchema', True)
+    .csv('data/raw/products.csv')
 )
 ```
 
@@ -311,9 +311,9 @@ This is convenient for exploration but risky as a production contract. A future 
 ```python
 df = (
     spark.read
-    .option("header", True)
+    .option('header', True)
     .schema(product_schema)
-    .csv("data/raw/products.csv")
+    .csv('data/raw/products.csv')
 )
 ```
 
@@ -328,8 +328,8 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import DecimalType
 
 typed_df = df.withColumn(
-    "unit_price",
-    F.col("unit_price_raw").cast(DecimalType(12, 2)),
+    'unit_price',
+    F.col('unit_price_raw').cast(DecimalType(12, 2)),
 )
 ```
 
@@ -337,8 +337,8 @@ PySpark 4.x uses ANSI behavior by default, so invalid casts can raise runtime ex
 
 ```python
 typed_df = df.withColumn(
-    "unit_price",
-    F.expr("try_cast(unit_price_raw AS DECIMAL(12,2))"),
+    'unit_price',
+    F.expr('try_cast(unit_price_raw AS DECIMAL(12,2))'),
 )
 ```
 
@@ -354,8 +354,8 @@ For example:
 
 ```python
 bad_price = (
-    F.col("unit_price_raw").isNotNull()
-    & F.col("unit_price").isNull()
+    F.col('unit_price_raw').isNotNull()
+    & F.col('unit_price').isNull()
 )
 ```
 
@@ -377,24 +377,24 @@ CSV is row-oriented text with weak typing. The schema is not embedded in the fil
 ```python
 orders_df = (
     spark.read
-    .option("header", True)
-    .option("mode", "PERMISSIVE")
-    .option("dateFormat", "yyyy-MM-dd")
+    .option('header', True)
+    .option('mode', 'PERMISSIVE')
+    .option('dateFormat', 'yyyy-MM-dd')
     .schema(order_schema)
-    .csv("data/raw/orders.csv")
+    .csv('data/raw/orders.csv')
 )
 ```
 
 Useful CSV options include:
 
 ```python
-.option("header", True)
-.option("sep", ",")
-.option("quote", '"')
-.option("escape", '"')
-.option("nullValue", "")
-.option("dateFormat", "yyyy-MM-dd")
-.option("timestampFormat", "yyyy-MM-dd HH:mm:ss")
+.option('header', True)
+.option('sep', ',')
+.option('quote', '"')
+.option('escape', '"')
+.option('nullValue', '')
+.option('dateFormat', 'yyyy-MM-dd')
+.option('timestampFormat', 'yyyy-MM-dd HH:mm:ss')
 ```
 
 Do not assume defaults match a source-system contract. Make important parsing options explicit.
@@ -407,7 +407,7 @@ Spark expects newline-delimited JSON by default: normally one complete JSON obje
 events_df = (
     spark.read
     .schema(event_schema)
-    .json("data/raw/order_events.json")
+    .json('data/raw/order_events.json')
 )
 ```
 
@@ -429,8 +429,8 @@ Parquet is a self-describing columnar format well suited to analytical processin
 Write:
 
 ```python
-clean_df.write.mode("overwrite").parquet(
-    "data/curated/products"
+clean_df.write.mode('overwrite').parquet(
+    'data/curated/products'
 )
 ```
 
@@ -438,7 +438,7 @@ Read:
 
 ```python
 clean_df = spark.read.parquet(
-    "data/curated/products"
+    'data/curated/products'
 )
 ```
 
@@ -451,19 +451,19 @@ Equivalent generic syntax is also available:
 ```python
 df = (
     spark.read
-    .format("csv")
-    .option("header", True)
+    .format('csv')
+    .option('header', True)
     .schema(product_schema)
-    .load("data/raw/products.csv")
+    .load('data/raw/products.csv')
 )
 ```
 
 ```python
 (
     clean_df.write
-    .format("parquet")
-    .mode("overwrite")
-    .save("data/curated/products")
+    .format('parquet')
+    .mode('overwrite')
+    .save('data/curated/products')
 )
 ```
 
@@ -485,7 +485,7 @@ Common write modes:
 Example:
 
 ```python
-clean_df.write.mode("overwrite").parquet(output_path)
+clean_df.write.mode('overwrite').parquet(output_path)
 ```
 
 Append/overwrite semantics become more important in later incremental-processing phases. For now, always choose the mode intentionally rather than accepting it accidentally.
@@ -495,7 +495,7 @@ Append/overwrite semantics become more important in later incremental-processing
 This:
 
 ```python
-df.write.parquet("data/curated/orders")
+df.write.parquet('data/curated/orders')
 ```
 
 typically creates a directory containing one or more part files plus metadata/success markers, not a single `orders.parquet` file.
@@ -522,19 +522,19 @@ Example:
 
 ```python
 raw_schema = StructType([
-    StructField("order_id", StringType(), True),
-    StructField("customer_id", StringType(), True),
-    StructField("order_ts", StringType(), True),
-    StructField("_corrupt_record", StringType(), True),
+    StructField('order_id', StringType(), True),
+    StructField('customer_id', StringType(), True),
+    StructField('order_ts', StringType(), True),
+    StructField('_corrupt_record', StringType(), True),
 ])
 
 raw_df = (
     spark.read
-    .option("header", True)
-    .option("mode", "PERMISSIVE")
-    .option("columnNameOfCorruptRecord", "_corrupt_record")
+    .option('header', True)
+    .option('mode', 'PERMISSIVE')
+    .option('columnNameOfCorruptRecord', '_corrupt_record')
     .schema(raw_schema)
-    .csv("data/raw/orders.csv")
+    .csv('data/raw/orders.csv')
 )
 ```
 
@@ -626,10 +626,10 @@ Choose columns and expressions.
 
 ```python
 selected_df = df.select(
-    "order_id",
-    "store_id",
-    F.col("quantity"),
-    (F.col("quantity") * F.col("unit_price")).alias("gross_sales"),
+    'order_id',
+    'store_id',
+    F.col('quantity'),
+    (F.col('quantity') * F.col('unit_price')).alias('gross_sales'),
 )
 ```
 
@@ -641,14 +641,14 @@ Rename an expression:
 
 ```python
 df.select(
-    F.col("unit_price").alias("price")
+    F.col('unit_price').alias('price')
 )
 ```
 
 A DataFrame can also be aliased, which becomes important for joins later:
 
 ```python
-orders = orders_df.alias("o")
+orders = orders_df.alias('o')
 ```
 
 ### `filter()` / `where()`
@@ -656,19 +656,19 @@ orders = orders_df.alias("o")
 They are aliases for row filtering.
 
 ```python
-valid_qty_df = df.filter(F.col("quantity") > 0)
+valid_qty_df = df.filter(F.col('quantity') > 0)
 ```
 
 ```python
-valid_qty_df = df.where(F.col("quantity") > 0)
+valid_qty_df = df.where(F.col('quantity') > 0)
 ```
 
 Prefer Column expressions for composability:
 
 ```python
 is_valid = (
-    F.col("order_id").isNotNull()
-    & (F.col("quantity") > 0)
+    F.col('order_id').isNotNull()
+    & (F.col('quantity') > 0)
 )
 
 valid_df = df.filter(is_valid)
@@ -683,8 +683,8 @@ Add or replace one column:
 
 ```python
 standardized_df = df.withColumn(
-    "sku",
-    F.upper(F.trim(F.col("sku")))
+    'sku',
+    F.upper(F.trim(F.col('sku')))
 )
 ```
 
@@ -696,8 +696,8 @@ Remove columns:
 
 ```python
 clean_df = typed_df.drop(
-    "unit_price_raw",
-    "_corrupt_record",
+    'unit_price_raw',
+    '_corrupt_record',
 )
 ```
 
@@ -718,7 +718,7 @@ This answers: "Are these complete rows identical?"
 Deduplicate using all columns or a chosen key subset:
 
 ```python
-deduped_df = df.dropDuplicates(["order_id"])
+deduped_df = df.dropDuplicates(['order_id'])
 ```
 
 This answers a different question: "Which columns define duplicate identity?"
@@ -731,8 +731,8 @@ Sort rows:
 
 ```python
 ordered_df = df.orderBy(
-    F.col("order_ts").desc(),
-    F.col("order_id").asc(),
+    F.col('order_ts').desc(),
+    F.col('order_id').asc(),
 )
 ```
 
@@ -759,15 +759,15 @@ DataFrame transformations are built from **Column expressions**.
 Reference a column explicitly:
 
 ```python
-F.col("quantity")
+F.col('quantity')
 ```
 
 Examples:
 
 ```python
-F.col("quantity") > 0
-F.col("sku").isNull()
-F.col("unit_price") * F.col("quantity")
+F.col('quantity') > 0
+F.col('sku').isNull()
+F.col('unit_price') * F.col('quantity')
 ```
 
 ### `lit()`
@@ -775,7 +775,7 @@ F.col("unit_price") * F.col("quantity")
 Create a literal Column expression:
 
 ```python
-F.lit("PHASE_1")
+F.lit('PHASE_1')
 F.lit(0)
 F.lit(None)
 ```
@@ -783,7 +783,7 @@ F.lit(None)
 Example:
 
 ```python
-df.withColumn("pipeline_stage", F.lit("clean"))
+df.withColumn('pipeline_stage', F.lit('clean'))
 ```
 
 ### `when()` / `otherwise()`
@@ -792,10 +792,10 @@ Build conditional expressions.
 
 ```python
 classified_df = df.withColumn(
-    "stock_status",
-    F.when(F.col("on_hand_qty") <= 0, F.lit("OUT_OF_STOCK"))
-     .when(F.col("on_hand_qty") < 10, F.lit("LOW_STOCK"))
-     .otherwise(F.lit("IN_STOCK"))
+    'stock_status',
+    F.when(F.col('on_hand_qty') <= 0, F.lit('OUT_OF_STOCK'))
+     .when(F.col('on_hand_qty') < 10, F.lit('LOW_STOCK'))
+     .otherwise(F.lit('IN_STOCK'))
 )
 ```
 
@@ -807,8 +807,8 @@ Prefer:
 
 ```python
 df.withColumn(
-    "gross_sales",
-    F.col("quantity") * F.col("unit_price"),
+    'gross_sales',
+    F.col('quantity') * F.col('unit_price'),
 )
 ```
 
@@ -842,14 +842,14 @@ NaN
 Use:
 
 ```python
-F.col("customer_id").isNull()
-F.col("customer_id").isNotNull()
+F.col('customer_id').isNull()
+F.col('customer_id').isNotNull()
 ```
 
 Do not write Python-style comparisons such as:
 
 ```python
-F.col("customer_id") == None
+F.col('customer_id') == None
 ```
 
 ### Filling nulls
@@ -858,7 +858,7 @@ F.col("customer_id") == None
 
 ```python
 filled_df = df.fillna(
-    {"discount_amount": 0}
+    {'discount_amount': 0}
 )
 ```
 
@@ -871,10 +871,10 @@ Return the first non-null expression:
 ```python
 df.select(
     F.coalesce(
-        F.col("preferred_name"),
-        F.col("legal_name"),
-        F.lit("UNKNOWN"),
-    ).alias("display_name")
+        F.col('preferred_name'),
+        F.col('legal_name'),
+        F.lit('UNKNOWN'),
+    ).alias('display_name')
 )
 ```
 
@@ -883,7 +883,7 @@ This `coalesce()` is a SQL function for values. It is different from `DataFrame.
 ### Dropping nulls
 
 ```python
-df.dropna(subset=["order_id", "store_id"])
+df.dropna(subset=['order_id', 'store_id'])
 ```
 
 This is concise, but for an auditable pipeline it is often better to route invalid rows to a rejected dataset rather than silently discard them.
@@ -895,7 +895,7 @@ Comparisons involving `NULL` can produce `NULL`, not simply `True` or `False`.
 For example:
 
 ```python
-F.col("quantity") > 0
+F.col('quantity') > 0
 ```
 
 does not evaluate to `False` when `quantity` is `NULL`; it evaluates to unknown/`NULL`.
@@ -904,8 +904,8 @@ So define validity explicitly:
 
 ```python
 valid_quantity = (
-    F.col("quantity").isNotNull()
-    & (F.col("quantity") > 0)
+    F.col('quantity').isNotNull()
+    & (F.col('quantity') > 0)
 )
 ```
 
@@ -922,13 +922,13 @@ Use `pyspark.sql.functions` so transformations remain column expressions.
 Common functions:
 
 ```python
-F.trim("sku")
-F.upper("province")
-F.lower("email")
-F.length("sku")
-F.regexp_replace("phone", r"[^0-9]", "")
-F.split("tags", r"\|")
-F.concat_ws("-", "store_id", "sku")
+F.trim('sku')
+F.upper('province')
+F.lower('email')
+F.length('sku')
+F.regexp_replace('phone', r'[^0-9]', '')
+F.split('tags', r'\|')
+F.concat_ws('-', 'store_id', 'sku')
 ```
 
 Example:
@@ -936,9 +936,9 @@ Example:
 ```python
 standardized_df = (
     df
-    .withColumn("sku", F.upper(F.trim("sku")))
-    .withColumn("province", F.upper(F.trim("province")))
-    .withColumn("email", F.lower(F.trim("email")))
+    .withColumn('sku', F.upper(F.trim('sku')))
+    .withColumn('province', F.upper(F.trim('province')))
+    .withColumn('email', F.lower(F.trim('email')))
 )
 ```
 
@@ -955,11 +955,11 @@ Be careful not to normalize away meaningful distinctions. For example, uppercasi
 Examples:
 
 ```python
-F.abs("variance")
-F.round("unit_price", 2)
-F.bround("unit_price", 2)
-F.greatest("quantity", F.lit(0))
-F.least("discount_pct", F.lit(1.0))
+F.abs('variance')
+F.round('unit_price', 2)
+F.bround('unit_price', 2)
+F.greatest('quantity', F.lit(0))
+F.least('discount_pct', F.lit(1.0))
 ```
 
 For currency:
@@ -974,8 +974,8 @@ Parse a string into a date:
 
 ```python
 df = df.withColumn(
-    "order_date",
-    F.to_date("order_date_raw", "yyyy-MM-dd"),
+    'order_date',
+    F.to_date('order_date_raw', 'yyyy-MM-dd'),
 )
 ```
 
@@ -983,13 +983,13 @@ Common functions:
 
 ```python
 F.current_date()
-F.year("order_date")
-F.month("order_date")
-F.dayofmonth("order_date")
-F.date_add("order_date", 7)
-F.date_sub("order_date", 7)
-F.datediff("ship_date", "order_date")
-F.date_format("order_date", "yyyy-MM")
+F.year('order_date')
+F.month('order_date')
+F.dayofmonth('order_date')
+F.date_add('order_date', 7)
+F.date_sub('order_date', 7)
+F.datediff('ship_date', 'order_date')
+F.date_format('order_date', 'yyyy-MM')
 ```
 
 ### Timestamps
@@ -998,10 +998,10 @@ Parse a timestamp:
 
 ```python
 df = df.withColumn(
-    "order_ts",
+    'order_ts',
     F.to_timestamp(
-        "order_ts_raw",
-        "yyyy-MM-dd HH:mm:ss",
+        'order_ts_raw',
+        'yyyy-MM-dd HH:mm:ss',
     ),
 )
 ```
@@ -1009,9 +1009,9 @@ df = df.withColumn(
 Extract or derive components:
 
 ```python
-F.year("order_ts")
-F.month("order_ts")
-F.hour("order_ts")
+F.year('order_ts')
+F.month('order_ts')
+F.hour('order_ts')
 ```
 
 ### Parsing discipline
@@ -1036,7 +1036,7 @@ Example schema:
 from pyspark.sql.types import ArrayType, StringType
 
 StructField(
-    "tags",
+    'tags',
     ArrayType(
         StringType(),
         containsNull=False,
@@ -1054,9 +1054,9 @@ Example value:
 Useful functions include:
 
 ```python
-F.size("tags")
-F.array_contains("tags", "clearance")
-F.element_at("tags", 1)
+F.size('tags')
+F.array_contains('tags', 'clearance')
+F.element_at('tags', 1)
 ```
 
 Spark SQL array positions used by functions can have different indexing rules than Python lists, so verify the specific function rather than assuming Python semantics.
@@ -1079,14 +1079,14 @@ Schema:
 
 ```python
 address_schema = StructType([
-    StructField("city", StringType(), True),
-    StructField("province", StringType(), True),
+    StructField('city', StringType(), True),
+    StructField('province', StringType(), True),
 ])
 
 order_schema = StructType([
-    StructField("order_id", IntegerType(), False),
+    StructField('order_id', IntegerType(), False),
     StructField(
-        "shipping_address",
+        'shipping_address',
         address_schema,
         True,
     ),
@@ -1097,9 +1097,9 @@ Access nested fields with dot notation:
 
 ```python
 df.select(
-    "order_id",
-    F.col("shipping_address.city").alias("city"),
-    F.col("shipping_address.province").alias("province"),
+    'order_id',
+    F.col('shipping_address.city').alias('city'),
+    F.col('shipping_address.province').alias('province'),
 )
 ```
 
@@ -1107,11 +1107,11 @@ Create a struct:
 
 ```python
 df.select(
-    "order_id",
+    'order_id',
     F.struct(
-        F.col("city"),
-        F.col("province"),
-    ).alias("shipping_address"),
+        F.col('city'),
+        F.col('province'),
+    ).alias('shipping_address'),
 )
 ```
 
@@ -1256,7 +1256,7 @@ order_ts
 but a query only requires:
 
 ```python
-df.select("order_id", "order_ts")
+df.select('order_id', 'order_ts')
 ```
 
 a columnar reader can avoid reading unnecessary columns when the execution plan allows it.
@@ -1321,7 +1321,7 @@ The distinction matters for ownership and troubleshooting.
 Appropriate:
 
 ```python
-F.upper(F.trim("province"))
+F.upper(F.trim('province'))
 ```
 
 if province codes are defined as normalized uppercase codes.
@@ -1329,7 +1329,7 @@ if province codes are defined as normalized uppercase codes.
 Potentially inappropriate:
 
 ```python
-F.upper("product_name")
+F.upper('product_name')
 ```
 
 if casing is meaningful presentation data.
@@ -1384,11 +1384,11 @@ Phase 1 can use a simple priority-based reason:
 
 ```python
 rejected_df = typed_df.withColumn(
-    "rejection_reason",
-    F.when(F.col("_corrupt_record").isNotNull(), "MALFORMED_RECORD")
-     .when(F.col("order_id").isNull(), "MISSING_ORDER_ID")
-     .when(F.col("quantity").isNull(), "INVALID_QUANTITY")
-     .when(F.col("quantity") <= 0, "NON_POSITIVE_QUANTITY")
+    'rejection_reason',
+    F.when(F.col('_corrupt_record').isNotNull(), 'MALFORMED_RECORD')
+     .when(F.col('order_id').isNull(), 'MISSING_ORDER_ID')
+     .when(F.col('quantity').isNull(), 'INVALID_QUANTITY')
+     .when(F.col('quantity') <= 0, 'NON_POSITIVE_QUANTITY')
 )
 ```
 
@@ -1598,7 +1598,7 @@ No row should silently disappear between validation branches.
 After writing the valid dataset:
 
 ```python
-valid_df.write.mode("overwrite").parquet(output_path)
+valid_df.write.mode('overwrite').parquet(output_path)
 ```
 
 read it back:

@@ -1,38 +1,40 @@
 # Phase 1 — Experiment & Applied Practice Guide
 
+<a id="toc"></a>
+## Table of Contents
+
+- [Purpose](#purpose)
+- [Conventions](#conventions)
+- [Experiment 1 — DataFrame Fundamentals](#exp-01)
+- [Experiment 2 — Explicit Schemas](#exp-02)
+- [Experiment 3 — Messy CSV with Explicit Types](#exp-03)
+- [Experiment 4 — Preserve Raw Values and Parse Explicitly](#exp-04)
+- [Experiment 5 — Core DataFrame Operations](#exp-05)
+- [Experiment 6 — NULL Handling and Conditional Expressions](#exp-06)
+- [Experiment 7 — String Functions](#exp-07)
+- [Experiment 8 — Numeric Functions and Arithmetic](#exp-08)
+- [Experiment 9 — Dates and Timestamps](#exp-09)
+- [Experiment 10 — Arrays, Structs, and Nested JSON](#exp-10)
+- [Experiment 11 — CSV vs. JSON vs. Parquet](#exp-11)
+- [Experiment 12 — CSV Read Modes](#exp-12)
+- [Applied Phase 1 Project](#applied-project)
+- [Applied Task — Part 1](#applied-task-01)
+- [After Part 1](#after-part-01)
+
+---
+
+<a id="purpose"></a>
 ## Purpose
 
 This file consolidates the hands-on instructions for **Phase 1 — DataFrame Fundamentals, Schemas & I/O** of the PySpark 101 curriculum.
 
 Use it as the working guide for experiments and applied practice. The phase README remains the conceptual reference; this file is the execution-oriented companion.
 
-<!-- TOC START -->
-## Table of Contents
-
-- [Purpose](#purpose)
-- [Conventions](#conventions)
-- [Experiment 1 — DataFrame Fundamentals](#experiment-1-dataframe-fundamentals)
-- [Experiment 2 — Explicit Schemas](#experiment-2-explicit-schemas)
-- [Experiment 3 — Messy CSV with Explicit Types](#experiment-3-messy-csv-with-explicit-types)
-- [Experiment 4 — Preserve Raw Values and Parse Explicitly](#experiment-4-preserve-raw-values-and-parse-explicitly)
-- [Experiment 5 — Core DataFrame Operations](#experiment-5-core-dataframe-operations)
-- [Experiment 6 — NULL Handling and Conditional Expressions](#experiment-6-null-handling-and-conditional-expressions)
-- [Experiment 7 — String Functions](#experiment-7-string-functions)
-- [Experiment 8 — Numeric Functions and Arithmetic](#experiment-8-numeric-functions-and-arithmetic)
-- [Experiment 9 — Dates and Timestamps](#experiment-9-dates-and-timestamps)
-- [Experiment 10 — Arrays, Structs, and Nested JSON](#experiment-10-arrays-structs-and-nested-json)
-- [Experiment 11 — CSV vs. JSON vs. Parquet](#experiment-11-csv-vs-json-vs-parquet)
-- [Experiment 12 — CSV Read Modes](#experiment-12-csv-read-modes)
-- [Applied Phase 1 Project](#applied-phase-1-project)
-- [Applied Task — Part 1](#applied-task-part-1)
-- [After Part 1](#after-part-1)
-
-<!-- TOC END -->
-
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="conventions"></a>
 ## Conventions
 
 - Use **single quotes** for Python strings.
@@ -43,13 +45,12 @@ Use it as the working guide for experiments and applied practice. The phase READ
 - Treat parsing/type validity separately from business-rule validity.
 - Do not mark Phase 1 complete until the applied task and mastery gate are satisfied.
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-01"></a>
 # Experiment 1 — DataFrame Fundamentals
-
-
 
 ## Goal
 
@@ -61,8 +62,6 @@ Understand:
 - transformations vs. actions;
 - lazy evaluation;
 - DataFrame immutability.
-
-
 
 ## 1.1 Create a DataFrame with inferred types
 
@@ -109,8 +108,6 @@ df.show(truncate=False)
 spark.stop()
 ```
 
-
-
 ## 1.2 Transformation vs. action
 
 ```python
@@ -128,8 +125,6 @@ clean_df = df.filter(
 # show() is an action and triggers Spark execution.
 clean_df.show()
 ```
-
-
 
 ## 1.3 DataFrame immutability
 
@@ -153,8 +148,6 @@ smaller_df = df.drop('order_date')
 smaller_df.show()
 ```
 
-
-
 ## Questions
 
 1. Why did Spark infer `quantity` as a string?
@@ -162,13 +155,12 @@ smaller_df.show()
 3. Why does `df` remain unchanged after `df.drop('order_date')`?
 4. Why is an all-string schema dangerous in a production pipeline?
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-02"></a>
 # Experiment 2 — Explicit Schemas
-
-
 
 ## Goal
 
@@ -179,8 +171,6 @@ Understand:
 - Spark data types;
 - nullability;
 - explicit schema enforcement.
-
-
 
 ## 2.1 Define an explicit schema
 
@@ -221,8 +211,6 @@ print(schema.treeString())
 spark.stop()
 ```
 
-
-
 ## 2.2 Create correctly typed rows
 
 ```python
@@ -244,8 +232,6 @@ df.printSchema()
 df.show(truncate=False)
 ```
 
-
-
 ## 2.3 Violate `IntegerType`
 
 ```python
@@ -261,8 +247,6 @@ data = [
 
 df = spark.createDataFrame(data, schema)
 ```
-
-
 
 ## 2.4 Test nullability
 
@@ -294,19 +278,16 @@ data = [
 df = spark.createDataFrame(data, schema)
 ```
 
-
-
 ## Key distinction
 
 `nullable=True` means Spark permits NULL structurally. It does **not** mean NULL satisfies business rules.
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-03"></a>
 # Experiment 3 — Messy CSV with Explicit Types
-
-
 
 ## Goal
 
@@ -402,19 +383,16 @@ Key distinction:
 - `'abc'` → parsing/type problem;
 - `-2` → valid integer, potentially invalid business value.
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-04"></a>
 # Experiment 4 — Preserve Raw Values and Parse Explicitly
-
-
 
 ## Goal
 
 Build a more auditable ingestion pattern.
-
-
 
 ## 4.1 Read raw fields as strings
 
@@ -455,8 +433,6 @@ raw_df.printSchema()
 raw_df.show(truncate=False)
 ```
 
-
-
 ## 4.2 Create typed columns
 
 ```python
@@ -489,8 +465,6 @@ typed_df.printSchema()
 typed_df.show(truncate=False)
 ```
 
-
-
 ## 4.3 Detect conversion failures
 
 ```python
@@ -504,8 +478,6 @@ bad_quantity = (
     & col('quantity').isNull()
 )
 ```
-
-
 
 ## 4.4 Add rejection reasons
 
@@ -550,8 +522,6 @@ validated_df = (
 )
 ```
 
-
-
 ## 4.5 Split accepted and rejected rows
 
 ```python
@@ -575,13 +545,12 @@ accepted_df.show(truncate=False)
 rejected_df.show(truncate=False)
 ```
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-05"></a>
 # Experiment 5 — Core DataFrame Operations
-
-
 
 ## Goal
 
@@ -596,8 +565,6 @@ Practice:
 - `dropDuplicates()`;
 - `orderBy()`;
 - `limit()`.
-
-
 
 ## 5.1 Standardize strings
 
@@ -619,8 +586,6 @@ standardized_df = (
 standardized_df.show(truncate=False)
 ```
 
-
-
 ## 5.2 `select()` and `alias()`
 
 ```python
@@ -637,8 +602,6 @@ selected_df = (
 
 selected_df.show(truncate=False)
 ```
-
-
 
 ## 5.3 `filter()` / `where()`
 
@@ -664,8 +627,6 @@ filtered_df = (
 )
 ```
 
-
-
 ## 5.4 `drop()`
 
 ```python
@@ -678,8 +639,6 @@ business_view_df = (
     )
 )
 ```
-
-
 
 ## 5.5 `distinct()` vs. `dropDuplicates()`
 
@@ -715,8 +674,6 @@ deduplicated_df = (
 
 Do not assume `dropDuplicates()` deterministically chooses a preferred differing row.
 
-
-
 ## 5.6 `orderBy()` and `limit()`
 
 ```python
@@ -732,13 +689,12 @@ ordered_df = (
 sample_df = duplicate_df.limit(2)
 ```
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-06"></a>
 # Experiment 6 — NULL Handling and Conditional Expressions
-
-
 
 ## Goal
 
@@ -778,8 +734,6 @@ data = [
 df = spark.createDataFrame(data, schema)
 ```
 
-
-
 ## 6.1 NULL predicates
 
 ```python
@@ -802,8 +756,6 @@ present_quantity_df = (
 
 Prefer `isNull()` over `== None`.
 
-
-
 ## 6.2 `coalesce()`
 
 ```python
@@ -824,8 +776,6 @@ filled_df = (
     )
 )
 ```
-
-
 
 ## 6.3 `when()` / `otherwise()`
 
@@ -855,8 +805,6 @@ classified_df = (
 )
 ```
 
-
-
 ## 6.4 NULL propagation
 
 ```python
@@ -873,13 +821,12 @@ revenue_df = (
 
 If either operand is NULL, the result is normally NULL.
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-07"></a>
 # Experiment 7 — String Functions
-
-
 
 ## Goal
 
@@ -910,8 +857,6 @@ data = [
 df = spark.createDataFrame(data, schema)
 ```
 
-
-
 ## 7.1 Normalize strings
 
 ```python
@@ -939,8 +884,6 @@ standardized_df = (
 )
 ```
 
-
-
 ## 7.2 `regexp_replace()`
 
 ```python
@@ -966,8 +909,6 @@ cleaned_df = (
 )
 ```
 
-
-
 ## 7.3 `substring()`
 
 ```python
@@ -991,8 +932,6 @@ sku_parts_df = (
 
 Spark SQL-style positions are 1-based.
 
-
-
 ## 7.4 `length()`
 
 ```python
@@ -1009,8 +948,6 @@ length_df = (
     )
 )
 ```
-
-
 
 ## 7.5 `concat_ws()`
 
@@ -1033,13 +970,12 @@ reference_df = (
 )
 ```
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-08"></a>
 # Experiment 8 — Numeric Functions and Arithmetic
-
-
 
 ## Goal
 
@@ -1073,8 +1009,6 @@ data = [
 
 df = spark.createDataFrame(data, schema)
 ```
-
-
 
 ## 8.1 Derived measures
 
@@ -1112,8 +1046,6 @@ measures_df = (
 )
 ```
 
-
-
 ## 8.2 `round()` and `bround()`
 
 ```python
@@ -1143,8 +1075,6 @@ rounding_df = (
 )
 ```
 
-
-
 ## 8.3 `abs()`
 
 ```python
@@ -1164,13 +1094,12 @@ difference_df = (
 
 Typed arithmetic does not imply business validity.
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-09"></a>
 # Experiment 9 — Dates and Timestamps
-
-
 
 ## Goal
 
@@ -1208,8 +1137,6 @@ data = [
 df = spark.createDataFrame(data, schema)
 ```
 
-
-
 ## 9.1 Parse safely
 
 ```python
@@ -1238,8 +1165,6 @@ typed_df = (
 )
 ```
 
-
-
 ## 9.2 Extract date components
 
 ```python
@@ -1267,8 +1192,6 @@ calendar_df = (
 )
 ```
 
-
-
 ## 9.3 Date arithmetic
 
 ```python
@@ -1288,8 +1211,6 @@ shipping_df = (
     )
 )
 ```
-
-
 
 ## 9.4 Date difference
 
@@ -1340,8 +1261,6 @@ delivery_df = (
 )
 ```
 
-
-
 ## 9.5 `date_format()`
 
 ```python
@@ -1364,19 +1283,16 @@ formatted_df = (
 
 Remember: `date_format()` returns a string.
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-10"></a>
 # Experiment 10 — Arrays, Structs, and Nested JSON
-
-
 
 ## Goal
 
 Understand nested Spark SQL types.
-
-
 
 ## 10.1 Arrays
 
@@ -1410,8 +1326,6 @@ data = [
 df = spark.createDataFrame(data, schema)
 ```
 
-
-
 ## 10.2 Create an array column
 
 ```python
@@ -1431,8 +1345,6 @@ array_df = (
     )
 )
 ```
-
-
 
 ## 10.3 Structs
 
@@ -1470,8 +1382,6 @@ store_view_df = (
     )
 )
 ```
-
-
 
 ## 10.4 Nested JSON schema
 
@@ -1529,8 +1439,6 @@ orders_df = (
 )
 ```
 
-
-
 ## 10.5 `explode()`
 
 ```python
@@ -1555,8 +1463,6 @@ items_df = (
 
 `explode()` changes grain from one row per order to one row per order item.
 
-
-
 ## 10.6 `from_json()`
 
 ```python
@@ -1577,19 +1483,16 @@ parsed_json_df = (
 )
 ```
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-11"></a>
 # Experiment 11 — CSV vs. JSON vs. Parquet
-
-
 
 ## Goal
 
 Compare file formats, writes, read-back validation, and storage behavior.
-
-
 
 ## 11.1 Clean typed DataFrame
 
@@ -1623,8 +1526,6 @@ data = [
 df = spark.createDataFrame(data, schema)
 ```
 
-
-
 ## 11.2 Write CSV
 
 ```python
@@ -1648,8 +1549,6 @@ csv_df = (
 csv_df.printSchema()
 ```
 
-
-
 ## 11.3 Write JSON
 
 ```python
@@ -1659,8 +1558,6 @@ csv_df.printSchema()
     .json('output/json/orders')
 )
 ```
-
-
 
 ## 11.4 Write Parquet
 
@@ -1684,8 +1581,6 @@ parquet_df.printSchema()
 parquet_df.show(truncate=False)
 ```
 
-
-
 ## 11.5 Validate read-back
 
 ```python
@@ -1706,8 +1601,6 @@ print(f'Parquet rows: {parquet_count}')
 print(f'Counts match: {source_count == parquet_count}')
 ```
 
-
-
 ## 11.6 Column pruning
 
 ```python
@@ -1722,8 +1615,6 @@ price_df = (
     )
 )
 ```
-
-
 
 ## 11.7 Write modes
 
@@ -1750,13 +1641,12 @@ df.write.mode('ignore').parquet('output/parquet/orders')
 df.write.mode('error').parquet('output/parquet/orders')
 ```
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="exp-12"></a>
 # Experiment 12 — CSV Read Modes
-
-
 
 ## Goal
 
@@ -1778,8 +1668,6 @@ order_id,sku,quantity,unit_price,order_date
 1006,SKU-006,1,5.99,2026-08-20,EXTRA
 ```
 
-
-
 ## 12.1 Base schema
 
 ```python
@@ -1800,8 +1688,6 @@ base_schema = StructType([
     StructField('order_date', DateType(), True),
 ])
 ```
-
-
 
 ## 12.2 `PERMISSIVE`
 
@@ -1831,8 +1717,6 @@ permissive_df = (
 permissive_df.show(truncate=False)
 ```
 
-
-
 ## 12.3 `DROPMALFORMED`
 
 ```python
@@ -1847,8 +1731,6 @@ drop_df = (
 
 drop_df.show(truncate=False)
 ```
-
-
 
 ## 12.4 `FAILFAST`
 
@@ -1868,8 +1750,6 @@ failfast_df = (
 failfast_df.show(truncate=False)
 ```
 
-
-
 ## Read-mode mental model
 
 | Mode | Behavior |
@@ -1880,13 +1760,12 @@ failfast_df.show(truncate=False)
 
 Parsing modes are separate from business validation.
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="applied-project"></a>
 # Applied Phase 1 Project
-
-
 
 ## Goal
 
@@ -1909,8 +1788,6 @@ Validation
  Parquet   preserved diagnostics
 ```
 
-
-
 ## Repository structure
 
 ```text
@@ -1921,8 +1798,6 @@ phases/
     │   └── raw_orders.csv
     └── pipeline.py
 ```
-
-
 
 ## Raw fixture
 
@@ -1942,8 +1817,6 @@ order_id,sku,quantity,unit_price,order_date,province
 1010,SKU-010,,9.99,2026-08-21,ON
 ```
 
-
-
 ## Accepted output schema
 
 ```text
@@ -1955,16 +1828,12 @@ order_date   date
 province     string
 ```
 
-
-
 ## Standardization rules
 
 ```text
 sku       → trim + uppercase
 province  → trim + uppercase
 ```
-
-
 
 ## Business rules
 
@@ -1983,10 +1852,11 @@ AB, BC, MB, NB, NL, NS, NT, NU, ON, PE, QC, SK, YT
 
 Do not silently repair invalid business values.
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="applied-task-01"></a>
 # Applied Task — Part 1
 
 Implement only:
@@ -2001,8 +1871,6 @@ Implement only:
 8. preservation of raw conversion fields;
 9. schema inspection;
 10. row inspection.
-
-
 
 ## Starter skeleton
 
@@ -2070,8 +1938,6 @@ raw_schema = StructType([
 spark.stop()
 ```
 
-
-
 ## Questions to answer before Part 2
 
 1. Why are raw numeric/date fields initially strings?
@@ -2080,10 +1946,11 @@ spark.stop()
 4. Why is `-2` parseable even though it will later be rejected?
 5. Why should `'abc'` and NULL be distinguishable?
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)
 
 ---
 
+<a id="after-part-01"></a>
 # After Part 1
 
 Next steps:
@@ -2103,4 +1970,4 @@ Next steps:
 13. Commit the finalized phase.
 14. Only then generate the Phase 2 starter prompt.
 
-[Back to Table of Contents](#table-of-contents)
+[Back to Table of Contents](#toc)

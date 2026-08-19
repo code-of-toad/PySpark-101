@@ -12,6 +12,34 @@ The progression is:
 
 ---
 
+## Table of Contents
+
+- [Goal](#goal)
+- [Phase 1 — DataFrame Fundamentals, Schemas & I/O](#phase-1--dataframe-fundamentals-schemas--io)
+- [Phase 2 — Joins, Aggregations, Windows & Data Modeling](#phase-2--joins-aggregations-windows--data-modeling)
+- [Phase 3 — Spark SQL](#phase-3--spark-sql)
+- [Phase 4 — Spark's Execution Model](#phase-4--sparks-execution-model)
+- [Phase 5 — Catalyst, Query Plans & AQE](#phase-5--catalyst-query-plans--aqe)
+- [Phase 6 — Storage, Partitioning & Shuffle Engineering](#phase-6--storage-partitioning--shuffle-engineering)
+- [Phase 7 — PySpark Performance Engineering](#phase-7--pyspark-performance-engineering)
+- [Phase 8 — Spark UI, Monitoring & Debugging](#phase-8--spark-ui-monitoring--debugging)
+- [Phase 9 — PySpark Application Architecture](#phase-9--pyspark-application-architecture)
+- [Phase 10 — Data Quality & Schema Enforcement](#phase-10--data-quality--schema-enforcement)
+- [Phase 11 — Testing PySpark](#phase-11--testing-pyspark)
+- [Phase 12 — Incremental Processing & Idempotency](#phase-12--incremental-processing--idempotency)
+- [Phase 13 — Cloud Spark](#phase-13--cloud-spark)
+- [Phase 14 — Warehouse Integration & Analytical Serving](#phase-14--warehouse-integration--analytical-serving)
+- [Phase 15 — Batch Pipeline Architecture & Orchestration](#phase-15--batch-pipeline-architecture--orchestration)
+- [Phase 16 — Structured Streaming Fundamentals](#phase-16--structured-streaming-fundamentals)
+- [Phase 17 — Modern Table Formats & Production Engineering](#phase-17--modern-table-formats--production-engineering)
+- [Phase 18 — Capstone: Production-Style PySpark Data Platform](#phase-18--capstone-production-style-pyspark-data-platform)
+- [What to Deprioritize](#what-to-deprioritize)
+- [Final Mastery Standard](#final-mastery-standard)
+- [Curriculum Progression](#curriculum-progression)
+- [Guiding Principle](#guiding-principle)
+
+---
+
 # Phase 1 — DataFrame Fundamentals, Schemas & I/O
 
 ## Objective

@@ -8,6 +8,19 @@ The goal is not to collect tutorials or memorize PySpark syntax. The goal is to 
 
 ---
 
+## Table of Contents
+
+- [Learning Philosophy](#learning-philosophy)
+- [Canonical Project Documents](#canonical-project-documents)
+- [Curriculum](#curriculum)
+- [Learning Workflow](#learning-workflow)
+- [Repository Structure](#repository-structure)
+- [Data Strategy](#data-strategy)
+- [Current Status](#current-status)
+- [Final Mastery Target](#final-mastery-target)
+
+---
+
 ## Learning Philosophy
 
 The project follows this progression:

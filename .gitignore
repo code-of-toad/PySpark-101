@@ -1,0 +1,163 @@
+# ============================================================
+# PySpark 101 — .gitignore
+# ============================================================
+
+# ----------------------------
+# Python virtual environments
+# ----------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# ----------------------------
+# Python caches / bytecode
+# ----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# ----------------------------
+# Python packaging / builds
+# ----------------------------
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# ----------------------------
+# Jupyter
+# ----------------------------
+.ipynb_checkpoints/
+
+# ----------------------------
+# IDE / editor files
+# ----------------------------
+.vscode/
+.idea/
+*.code-workspace
+*.swp
+*.swo
+*~
+
+# ----------------------------
+# OS-generated files
+# ----------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ----------------------------
+# Environment variables / secrets
+# ----------------------------
+.env
+.env.*
+!.env.example
+
+# Common local credential/key files
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Google Cloud service-account keys / local ADC
+service-account*.json
+service_account*.json
+*-service-account.json
+application_default_credentials.json
+
+# ----------------------------
+# Spark local/runtime artifacts
+# ----------------------------
+derby.log
+metastore_db/
+spark-warehouse/
+spark-events/
+eventlog/
+*.lck
+
+# Structured Streaming checkpoints
+checkpoints/
+checkpoint/
+**/_checkpoint/
+**/checkpoints/
+
+# Spark-generated markers / metadata
+**/_SUCCESS
+**/_temporary/
+**/.spark-staging/
+
+# ----------------------------
+# Logs / temporary runtime output
+# ----------------------------
+*.log
+logs/
+tmp/
+temp/
+.cache/
+
+# ----------------------------
+# Generated project data
+#
+# Keep large/raw/generated data out of Git.
+# Small deterministic fixtures should live in tests/fixtures/
+# and are intentionally NOT ignored here.
+# ----------------------------
+data/raw/*
+data/curated/*
+data/rejected/*
+data/processed/*
+data/output/*
+data/incremental/*
+
+# Preserve directory placeholders if used
+!data/raw/.gitkeep
+!data/curated/.gitkeep
+!data/rejected/.gitkeep
+!data/processed/.gitkeep
+!data/output/.gitkeep
+!data/incremental/.gitkeep
+
+# Parquet is generally generated output in this learning repo
+*.parquet
+
+# Other common generated analytical formats
+*.orc
+*.avro
+
+# ----------------------------
+# Local databases / scratch storage
+# ----------------------------
+*.db
+*.sqlite
+*.sqlite3
+
+# ----------------------------
+# Archives / packaged dependencies
+# ----------------------------
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# ----------------------------
+# Cloud / infrastructure local state
+# ----------------------------
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# ----------------------------
+# Miscellaneous
+# ----------------------------
+.python-version

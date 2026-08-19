@@ -161,4 +161,4 @@ data/incremental/*
 # Miscellaneous
 # ----------------------------
 .python-version
-_scratch*.py
+_scratch*/

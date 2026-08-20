@@ -1,17 +1,9 @@
 # Phase 1 — DataFrame Fundamentals, Schemas & I/O
 
-## Objective
-
-Become completely comfortable reading, manipulating, validating, and writing structured data with the PySpark DataFrame API.
-
-Phase 1 establishes the habits that every later phase depends on: make schemas explicit, keep transformations declarative, distinguish parse failures from business-rule failures, preserve rejected data, and write typed analytical outputs rather than allowing raw-file quirks to leak downstream.
-
-Examples in these notes target the repository's current dependency, **PySpark 4.2.0**, and use the repository's retail-data direction.
-
----
-
+<a id="toc"></a>
 ## Table of Contents
 
+- [Objective](#objective)
 - [Phase Mental Model](#phase-mental-model)
 - [1. Spark Fundamentals](#1-spark-fundamentals)
 - [2. Schemas and Data Types](#2-schemas-and-data-types)
@@ -30,6 +22,22 @@ Examples in these notes target the repository's current dependency, **PySpark 4.
 
 ---
 
+<a id="objective"></a>
+## Objective
+
+Become completely comfortable reading, manipulating, validating, and writing structured data with the PySpark DataFrame API.
+
+Phase 1 establishes the habits that every later phase depends on: make schemas explicit, keep transformations declarative, distinguish parse failures from business-rule failures, preserve rejected data, and write typed analytical outputs rather than allowing raw-file quirks to leak downstream.
+
+Examples in these notes target the repository's current dependency, **PySpark 4.2.0**, and use the repository's retail-data direction.
+
+---
+
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="phase-mental-model"></a>
 ## Phase Mental Model
 
 A basic production-style batch flow is:
@@ -64,6 +72,11 @@ For each dataset, be able to answer:
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="1-spark-fundamentals"></a>
 ## 1. Spark Fundamentals
 
 ### `SparkSession`
@@ -204,6 +217,11 @@ Deeper job/stage/task execution comes later in the curriculum.
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="2-schemas-and-data-types"></a>
 ## 2. Schemas and Data Types
 
 A schema is a contract describing column names, data types, nested structure, and nullability.
@@ -361,6 +379,11 @@ bad_price = (
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="3-reading-and-writing-data"></a>
 ## 3. Reading and Writing Data
 
 Spark uses the DataFrame reader/writer interfaces:
@@ -504,6 +527,11 @@ That behavior reflects distributed execution. Avoid forcing a single file merely
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="4-read-modes-and-malformed-records"></a>
 ## 4. Read Modes and Malformed Records
 
 Malformed-record behavior is part of the ingestion contract.
@@ -612,6 +640,11 @@ Spark has file-source options such as `ignoreCorruptFiles`, but silently ignorin
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="5-core-dataframe-operations"></a>
 ## 5. Core DataFrame Operations
 
 Assume:
@@ -750,6 +783,11 @@ Useful for inspection, but a small preview is not proof that the full dataset is
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="6-expressions-and-functions"></a>
 ## 6. Expressions and Functions
 
 DataFrame transformations are built from **Column expressions**.
@@ -825,6 +863,11 @@ Custom UDF performance is a later topic.
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="7-null-handling"></a>
 ## 7. NULL Handling
 
 `NULL` means the value is unknown or absent. It is not the same as:
@@ -913,6 +956,11 @@ This matters when building complementary accepted/rejected filters.
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="8-string-numeric-date-and-timestamp-functions"></a>
 ## 8. String, Numeric, Date, and Timestamp Functions
 
 Use `pyspark.sql.functions` so transformations remain column expressions.
@@ -1024,6 +1072,11 @@ Time zones are a production concern that becomes important when timestamps repre
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="9-arrays-structs-and-nested-data"></a>
 ## 9. Arrays, Structs, and Nested Data
 
 Semi-structured JSON often contains nested values.
@@ -1145,6 +1198,11 @@ Do not flatten automatically without knowing what one resulting row should repre
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="10-introductory-storage-concepts"></a>
 ## 10. Introductory Storage Concepts
 
 Phase 1 introduces storage behavior at a high level. Partitioning, predicate pushdown, file sizing, and shuffle engineering are treated more deeply later.
@@ -1267,6 +1325,11 @@ It is one reason to avoid carrying `select("*")` through an entire pipeline when
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="11-data-engineering-practices"></a>
 ## 11. Data-Engineering Practices
 
 ### 1. Define contracts explicitly
@@ -1412,6 +1475,11 @@ As complexity grows, those concerns should become maintainable functions/modules
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="12-common-pitfalls"></a>
 ## 12. Common Pitfalls
 
 ### Relying on `inferSchema` as a production contract
@@ -1480,6 +1548,11 @@ The repository convention is to preserve code, small intentional fixtures, tests
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="13-applied-mastery-target"></a>
 ## 13. Applied Mastery Target
 
 Phase 1 is not complete merely because the syntax in this README is familiar.
@@ -1621,6 +1694,11 @@ That read-back check proves more than the absence of a write exception.
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="14-phase-1-mastery-checklist"></a>
 ## 14. Phase 1 Mastery Checklist
 
 Before Phase 1 can be marked complete, I should be able to do and explain the following without relying on a tutorial.
@@ -1696,3 +1774,5 @@ Explain at a high level:
 Produce messy retail input → typed/standardized candidates → valid and rejected branches → Parquet valid output, while preserving rejection reasons and proving basic row-count/schema reconciliation.
 
 Phase 1 remains **in progress** until this applied target and the curriculum mastery requirements are demonstrated.
+
+[Back to Table of Contents](#toc)

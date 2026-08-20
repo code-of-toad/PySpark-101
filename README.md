@@ -8,11 +8,12 @@ The goal is not to collect tutorials or memorize PySpark syntax. The goal is to 
 
 ---
 
+<a id="toc"></a>
 ## Table of Contents
 
 - [Learning Philosophy](#learning-philosophy)
 - [Canonical Project Documents](#canonical-project-documents)
-- [Dependencies & Virtual Environment](#dependencies--virtual-environment)
+- [Dependencies & Virtual Environment](#dependencies-and-virtual-environment)
 - [Curriculum](#curriculum)
 - [Phase Learning Model](#phase-learning-model)
 - [Phase README Standard](#phase-readme-standard)
@@ -25,6 +26,7 @@ The goal is not to collect tutorials or memorize PySpark syntax. The goal is to 
 
 ---
 
+<a id="learning-philosophy"></a>
 ## Learning Philosophy
 
 The project follows this progression:
@@ -58,6 +60,11 @@ The learning process should be **structured enough to preserve rigor, but flexib
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="canonical-project-documents"></a>
 ## Canonical Project Documents
 
 The project uses these sources of truth:
@@ -119,6 +126,11 @@ Git repo      → Evidence of completed work
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="dependencies-and-virtual-environment"></a>
 ## Dependencies & Virtual Environment
 
 Project dependencies are declared in [`requirements.txt`](requirements.txt).
@@ -183,7 +195,11 @@ deactivate
 
 The `.venv/` directory is intentionally excluded from Git. Commit `requirements.txt`, not the local virtual environment.
 
+[Back to Table of Contents](#toc)
 
+---
+
+<a id="curriculum"></a>
 ## Curriculum
 
 | Phase | Topic |
@@ -211,6 +227,11 @@ See [`CURRICULUM.md`](CURRICULUM.md) for the full curriculum and mastery require
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="phase-learning-model"></a>
 ## Phase Learning Model
 
 Use **one dedicated ChatGPT chat per curriculum phase**.
@@ -267,6 +288,11 @@ The only hard requirement is:
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="phase-readme-standard"></a>
 ## Phase README Standard
 
 Every curriculum phase should have a substantive phase README, for example:
@@ -306,6 +332,11 @@ Trivial placeholder READMEs should generally be avoided rather than created.
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="repository-structure"></a>
 ## Repository Structure
 
 The repository should grow incrementally.
@@ -364,6 +395,11 @@ Create files and directories only when they serve actual work.
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="repository-conventions"></a>
 ## Repository Conventions
 
 ### Preserve worthwhile work
@@ -419,6 +455,11 @@ As relevant to the current phase, emphasize:
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="data-strategy"></a>
 ## Data Strategy
 
 Where practical, phases should reuse an evolving data domain rather than unrelated toy datasets.
@@ -465,6 +506,11 @@ Small deterministic fixtures may be committed when they are intentionally part o
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="git-and-progress-tracking"></a>
 ## Git and Progress Tracking
 
 Git history should reflect meaningful learning and implementation milestones.
@@ -498,6 +544,11 @@ At phase completion:
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="current-status"></a>
 ## Current Status
 
 **Phase 1 — DataFrame Fundamentals, Schemas & I/O**
@@ -508,6 +559,11 @@ Progress is tracked in [`ROADMAP.md`](ROADMAP.md).
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="final-mastery-target"></a>
 ## Final Mastery Target
 
 By the end of the project, I should be able to take a requirement such as:
@@ -544,3 +600,5 @@ and reason confidently about:
 The goal is not merely to **know PySpark syntax**.
 
 It is to **use Spark independently and professionally as a data engineer**.
+
+[Back to Table of Contents](#toc)

@@ -5,21 +5,21 @@
 
 - [Purpose](#purpose)
 - [Conventions](#conventions)
-- [Experiment 1 — DataFrame Fundamentals](#exp-01)
-- [Experiment 2 — Explicit Schemas](#exp-02)
-- [Experiment 3 — Messy CSV with Explicit Types](#exp-03)
-- [Experiment 4 — Preserve Raw Values and Parse Explicitly](#exp-04)
-- [Experiment 5 — Core DataFrame Operations](#exp-05)
-- [Experiment 6 — NULL Handling and Conditional Expressions](#exp-06)
-- [Experiment 7 — String Functions](#exp-07)
-- [Experiment 8 — Numeric Functions and Arithmetic](#exp-08)
-- [Experiment 9 — Dates and Timestamps](#exp-09)
-- [Experiment 10 — Arrays, Structs, and Nested JSON](#exp-10)
-- [Experiment 11 — CSV vs. JSON vs. Parquet](#exp-11)
-- [Experiment 12 — CSV Read Modes](#exp-12)
-- [Applied Phase 1 Project](#applied-project)
-- [Applied Task — Part 1](#applied-task-01)
-- [After Part 1](#after-part-01)
+- [Experiment 1 — DataFrame Fundamentals](#experiment-1-dataframe-fundamentals)
+- [Experiment 2 — Explicit Schemas](#experiment-2-explicit-schemas)
+- [Experiment 3 — Messy CSV with Explicit Types](#experiment-3-messy-csv-with-explicit-types)
+- [Experiment 4 — Preserve Raw Values and Parse Explicitly](#experiment-4-preserve-raw-values-and-parse-explicitly)
+- [Experiment 5 — Core DataFrame Operations](#experiment-5-core-dataframe-operations)
+- [Experiment 6 — NULL Handling and Conditional Expressions](#experiment-6-null-handling-and-conditional-expressions)
+- [Experiment 7 — String Functions](#experiment-7-string-functions)
+- [Experiment 8 — Numeric Functions and Arithmetic](#experiment-8-numeric-functions-and-arithmetic)
+- [Experiment 9 — Dates and Timestamps](#experiment-9-dates-and-timestamps)
+- [Experiment 10 — Arrays, Structs, and Nested JSON](#experiment-10-arrays-structs-and-nested-json)
+- [Experiment 11 — CSV vs. JSON vs. Parquet](#experiment-11-csv-vs-json-vs-parquet)
+- [Experiment 12 — CSV Read Modes](#experiment-12-csv-read-modes)
+- [Applied Phase 1 Project](#applied-phase-1-project)
+- [Applied Task — Part 1](#applied-task-part-1)
+- [After Part 1](#after-part-1)
 
 ---
 
@@ -29,6 +29,8 @@
 This file consolidates the hands-on instructions for **Phase 1 — DataFrame Fundamentals, Schemas & I/O** of the PySpark 101 curriculum.
 
 Use it as the working guide for experiments and applied practice. The phase README remains the conceptual reference; this file is the execution-oriented companion.
+
+---
 
 [Back to Table of Contents](#toc)
 
@@ -45,11 +47,13 @@ Use it as the working guide for experiments and applied practice. The phase READ
 - Treat parsing/type validity separately from business-rule validity.
 - Do not mark Phase 1 complete until the applied task and mastery gate are satisfied.
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-01"></a>
+<a id="experiment-1-dataframe-fundamentals"></a>
 # Experiment 1 — DataFrame Fundamentals
 
 ## Goal
@@ -155,11 +159,13 @@ smaller_df.show()
 3. Why does `df` remain unchanged after `df.drop('order_date')`?
 4. Why is an all-string schema dangerous in a production pipeline?
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-02"></a>
+<a id="experiment-2-explicit-schemas"></a>
 # Experiment 2 — Explicit Schemas
 
 ## Goal
@@ -282,11 +288,13 @@ df = spark.createDataFrame(data, schema)
 
 `nullable=True` means Spark permits NULL structurally. It does **not** mean NULL satisfies business rules.
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-03"></a>
+<a id="experiment-3-messy-csv-with-explicit-types"></a>
 # Experiment 3 — Messy CSV with Explicit Types
 
 ## Goal
@@ -383,11 +391,13 @@ Key distinction:
 - `'abc'` → parsing/type problem;
 - `-2` → valid integer, potentially invalid business value.
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-04"></a>
+<a id="experiment-4-preserve-raw-values-and-parse-explicitly"></a>
 # Experiment 4 — Preserve Raw Values and Parse Explicitly
 
 ## Goal
@@ -545,11 +555,13 @@ accepted_df.show(truncate=False)
 rejected_df.show(truncate=False)
 ```
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-05"></a>
+<a id="experiment-5-core-dataframe-operations"></a>
 # Experiment 5 — Core DataFrame Operations
 
 ## Goal
@@ -689,11 +701,13 @@ ordered_df = (
 sample_df = duplicate_df.limit(2)
 ```
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-06"></a>
+<a id="experiment-6-null-handling-and-conditional-expressions"></a>
 # Experiment 6 — NULL Handling and Conditional Expressions
 
 ## Goal
@@ -821,11 +835,13 @@ revenue_df = (
 
 If either operand is NULL, the result is normally NULL.
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-07"></a>
+<a id="experiment-7-string-functions"></a>
 # Experiment 7 — String Functions
 
 ## Goal
@@ -970,11 +986,13 @@ reference_df = (
 )
 ```
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-08"></a>
+<a id="experiment-8-numeric-functions-and-arithmetic"></a>
 # Experiment 8 — Numeric Functions and Arithmetic
 
 ## Goal
@@ -1094,11 +1112,13 @@ difference_df = (
 
 Typed arithmetic does not imply business validity.
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-09"></a>
+<a id="experiment-9-dates-and-timestamps"></a>
 # Experiment 9 — Dates and Timestamps
 
 ## Goal
@@ -1283,11 +1303,13 @@ formatted_df = (
 
 Remember: `date_format()` returns a string.
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-10"></a>
+<a id="experiment-10-arrays-structs-and-nested-json"></a>
 # Experiment 10 — Arrays, Structs, and Nested JSON
 
 ## Goal
@@ -1483,11 +1505,13 @@ parsed_json_df = (
 )
 ```
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-11"></a>
+<a id="experiment-11-csv-vs-json-vs-parquet"></a>
 # Experiment 11 — CSV vs. JSON vs. Parquet
 
 ## Goal
@@ -1641,11 +1665,13 @@ df.write.mode('ignore').parquet('output/parquet/orders')
 df.write.mode('error').parquet('output/parquet/orders')
 ```
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="exp-12"></a>
+<a id="experiment-12-csv-read-modes"></a>
 # Experiment 12 — CSV Read Modes
 
 ## Goal
@@ -1760,11 +1786,13 @@ failfast_df.show(truncate=False)
 
 Parsing modes are separate from business validation.
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="applied-project"></a>
+<a id="applied-phase-1-project"></a>
 # Applied Phase 1 Project
 
 ## Goal
@@ -1852,11 +1880,13 @@ AB, BC, MB, NB, NL, NS, NT, NU, ON, PE, QC, SK, YT
 
 Do not silently repair invalid business values.
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="applied-task-01"></a>
+<a id="applied-task-part-1"></a>
 # Applied Task — Part 1
 
 Implement only:
@@ -1946,11 +1976,13 @@ spark.stop()
 4. Why is `-2` parseable even though it will later be rejected?
 5. Why should `'abc'` and NULL be distinguishable?
 
+---
+
 [Back to Table of Contents](#toc)
 
 ---
 
-<a id="after-part-01"></a>
+<a id="after-part-1"></a>
 # After Part 1
 
 Next steps:

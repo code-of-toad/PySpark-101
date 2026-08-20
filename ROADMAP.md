@@ -1,5 +1,17 @@
 # PySpark 101 — Roadmap
 
+<a id="toc"></a>
+## Table of Contents
+
+- [Purpose](#purpose)
+- [Overall Progress](#overall-progress)
+- [Phase Status](#phase-status)
+- [End-of-Phase Handoff Standard](#end-of-phase-handoff-standard)
+- [Current State](#current-state)
+
+---
+
+<a id="purpose"></a>
 ## Purpose
 
 This file is the canonical **progress tracker** for the PySpark 101 curriculum.
@@ -12,6 +24,11 @@ A phase should be marked complete only after its **mastery gate has been passed*
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="overall-progress"></a>
 # Overall Progress
 
 - [ ] **Phase 1 — DataFrame Fundamentals, Schemas & I/O**
@@ -35,6 +52,11 @@ A phase should be marked complete only after its **mastery gate has been passed*
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="phase-status"></a>
 # Phase Status
 
 ## Phase 1 — DataFrame Fundamentals, Schemas & I/O
@@ -465,6 +487,11 @@ _To be filled in when the capstone is completed._
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="end-of-phase-handoff-standard"></a>
 # End-of-Phase Handoff Standard
 
 Before marking Phases 1–17 complete, confirm all of the following:
@@ -481,6 +508,11 @@ The next dedicated ChatGPT chat should begin **only after the previous phase's r
 
 ---
 
+[Back to Table of Contents](#toc)
+
+---
+
+<a id="current-state"></a>
 # Current State
 
 ```text
@@ -488,3 +520,5 @@ Current phase: Phase 1
 Status: Not started
 Completed phases: 0 / 18
 ```
+
+[Back to Table of Contents](#toc)

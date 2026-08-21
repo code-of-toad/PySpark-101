@@ -8,6 +8,11 @@ This file is intentionally lecture-only:
 - no exercises;
 - no assignment scaffolding.
 
+Comment convention:
+- comments immediately above a line explain WHAT the code is doing;
+- comments inside a chained expression explain WHY that option/expression exists;
+- longer block comments explain the data-engineering implication.
+
 Use it as a pen-and-paper study source: copy the code patterns and the
 surrounding comments into your notes.
 
@@ -44,8 +49,11 @@ from pyspark.sql.types import (
 # SparkSession is the main entry point for DataFrame and Spark SQL work.
 spark = (
     SparkSession.builder
+    # Give the Spark application a readable name for logs / Spark UI.
     .appName('phase_01_lecture')
+    # local[*] uses all available local CPU cores for this study environment.
     .master('local[*]')
+    # Reuse an existing SparkSession if one already exists; otherwise create it.
     .getOrCreate()
 )
 
@@ -62,6 +70,7 @@ rows = [
 # Without an explicit schema, Spark infers types from the Python values.
 inferred_df = spark.createDataFrame(
     rows,
+    # Column names are supplied, but Spark is still inferring the data types.
     ['product_id', 'sku', 'unit_price_raw'],
 )
 
@@ -92,7 +101,9 @@ inferred_df.printSchema()
 # They are lazy: Spark builds a logical plan first.
 clean_df = (
     inferred_df
+    # Keep only rows whose product_id is present.
     .filter(F.col('product_id').isNotNull())
+    # Project only the columns needed by the next step.
     .select('product_id', 'sku')
 )
 
@@ -125,8 +136,13 @@ smaller_df = inferred_df.drop('unit_price_raw')
 # column name + data type + nullability.
 
 product_schema = StructType([
+    # Required whole-number product identifier.
     StructField('product_id', IntegerType(), nullable=False),
+
+    # Required text business code.
     StructField('sku', StringType(), nullable=False),
+
+    # Exact decimal money: 12 total digits, 2 digits after the decimal point.
     StructField(
         'unit_price',
         DecimalType(12, 2),
@@ -179,6 +195,7 @@ typed_rows = [
 
 typed_df = spark.createDataFrame(
     typed_rows,
+    # Supplying schema= enforces the intended structure instead of inferring it.
     schema=product_schema,
 )
 
@@ -196,6 +213,7 @@ typed_df.printSchema()
 # Correctness-critical pipelines should still validate required fields.
 
 invalid_required_df = typed_df.filter(
+    # Explicitly validate required fields even though the schema documents them.
     F.col('product_id').isNull()
     | F.col('sku').isNull()
 )
@@ -240,6 +258,7 @@ cast_source_df = spark.createDataFrame(
 # cast() is appropriate when values are expected to be compatible.
 cast_example_df = cast_source_df.withColumn(
     'unit_price_cast',
+    # cast() asks Spark to convert the source column into the target type.
     F.col('unit_price_raw').cast(
         DecimalType(12, 2)
     ),
@@ -250,6 +269,7 @@ cast_example_df = cast_source_df.withColumn(
 # the batch, use deliberate safe parsing.
 safe_parse_df = cast_source_df.withColumn(
     'unit_price',
+    # try_cast returns NULL instead of failing when a value cannot be converted.
     F.expr(
         'try_cast(unit_price_raw AS DECIMAL(12,2))'
     ),
@@ -261,6 +281,7 @@ safe_parse_df = cast_source_df.withColumn(
 # raw value present but unparseable.
 safe_parse_df = safe_parse_df.withColumn(
     'price_parse_failed',
+    # A present raw value + NULL typed value means conversion failed.
     F.col('unit_price_raw').isNotNull()
     & F.col('unit_price').isNull(),
 )
@@ -308,10 +329,15 @@ with TemporaryDirectory(
     # Its schema is not embedded in the file.
     orders_df = (
         spark.read
+        # Treat the first CSV line as column names.
         .option('header', True)
+        # Preserve as much malformed input as possible instead of failing fast.
         .option('mode', 'PERMISSIVE')
+        # Declare the expected textual date representation.
         .option('dateFormat', 'yyyy-MM-dd')
+        # Apply our explicit typed contract.
         .schema(order_schema)
+        # Read the source CSV into a DataFrame.
         .csv(str(csv_path))
     )
 
@@ -354,7 +380,9 @@ with TemporaryDirectory(
 
     events_df = (
         spark.read
+        # Apply the expected JSON structure instead of relying on inference.
         .schema(event_schema)
+        # Parse newline-delimited JSON records.
         .json(str(json_path))
     )
 
@@ -370,11 +398,14 @@ with TemporaryDirectory(
     # Parquet is a self-describing columnar format.
     (
         orders_df.write
+        # Replace any prior study output at this path.
         .mode('overwrite')
+        # Persist the DataFrame in typed, columnar Parquet format.
         .parquet(str(parquet_path))
     )
 
     parquet_df = spark.read.parquet(
+        # Parquet carries schema metadata, so no explicit schema is required here.
         str(parquet_path)
     )
 
@@ -391,9 +422,13 @@ with TemporaryDirectory(
 
     generic_read_df = (
         spark.read
+        # Generic reader syntax: choose the source format explicitly.
         .format('csv')
+        # CSV-specific parsing option.
         .option('header', True)
+        # Reuse the same explicit source contract.
         .schema(order_schema)
+        # load() performs the actual source read.
         .load(str(csv_path))
     )
 
@@ -401,8 +436,11 @@ with TemporaryDirectory(
 
     (
         generic_read_df.write
+        # Generic writer syntax: choose Parquet explicitly.
         .format('parquet')
+        # Replace any previous output at the target path.
         .mode('overwrite')
+        # save() writes the distributed dataset.
         .save(str(generic_output_path))
     )
 
@@ -456,13 +494,18 @@ with TemporaryDirectory(
     # in a corrupt-record field.
     permissive_df = (
         spark.read
+        # Read the header row as field names.
         .option('header', True)
+        # Continue reading even when a row cannot fully satisfy the schema.
         .option('mode', 'PERMISSIVE')
         .option(
+            # Store malformed source text in this dedicated audit column.
             'columnNameOfCorruptRecord',
             '_corrupt_record',
         )
+        # Include _corrupt_record in the schema so Spark has somewhere to store it.
         .schema(malformed_schema)
+        # Read the malformed CSV fixture.
         .csv(str(malformed_path))
     )
 
@@ -483,6 +526,7 @@ with TemporaryDirectory(
     drop_df = (
         spark.read
         .option('header', True)
+        # Entire malformed records are discarded.
         .option('mode', 'DROPMALFORMED')
         .schema(drop_schema)
         .csv(str(malformed_path))
@@ -495,6 +539,7 @@ with TemporaryDirectory(
     failfast_df = (
         spark.read
         .option('header', True)
+        # Abort the read as soon as malformed input is encountered.
         .option('mode', 'FAILFAST')
         .schema(drop_schema)
         .csv(str(malformed_path))
@@ -554,8 +599,11 @@ operations_df = spark.createDataFrame(
 # -----------------------------------------------------------------------------
 
 selected_df = operations_df.select(
+    # Preserve source identifiers needed downstream.
     'order_id',
     'quantity',
+
+    # Column expressions can calculate derived values inside select().
     (
         F.col('quantity') * F.col('unit_price')
     ).alias('gross_sales'),
@@ -593,6 +641,7 @@ where_df = operations_df.where(
 
 standardized_df = operations_df.withColumn(
     'sku',
+    # trim() removes surrounding whitespace; upper() standardizes case.
     F.upper(F.trim(F.col('sku')))
 )
 
@@ -620,6 +669,7 @@ distinct_df = standardized_df.distinct()
 
 # Defines duplicate identity using selected columns.
 deduplicated_df = standardized_df.dropDuplicates(
+    # Only these columns define duplicate identity for this operation.
     ['order_id', 'sku']
 )
 
@@ -675,6 +725,8 @@ literal_column = F.lit('PHASE_1')
 
 classified_df = standardized_df.withColumn(
     'quantity_status',
+
+    # Evaluate conditions from top to bottom, like SQL CASE WHEN.
     F.when(
         F.col('quantity').isNull(),
         F.lit('MISSING'),
@@ -683,6 +735,7 @@ classified_df = standardized_df.withColumn(
         F.col('quantity') <= 0,
         F.lit('INVALID'),
     )
+    # otherwise() handles every row that matched none of the prior conditions.
     .otherwise(
         F.lit('VALID'),
     ),
@@ -731,6 +784,7 @@ present_df = null_df.filter(
 
 # Only use a replacement when it has domain meaning.
 filled_df = null_df.fillna(
+    # Only fill this field because UNKNOWN is an intentional domain fallback.
     {'province': 'UNKNOWN'}
 )
 
@@ -742,7 +796,9 @@ filled_df = null_df.fillna(
 # Returns the first non-null VALUE expression.
 display_df = null_df.select(
     F.coalesce(
+        # Return province when present...
         F.col('province'),
+        # ...otherwise fall back to the literal UNKNOWN.
         F.lit('UNKNOWN'),
     ).alias('province_display')
 )
@@ -759,7 +815,9 @@ display_df = null_df.select(
 # If NULL should be invalid, define the condition explicitly.
 
 valid_quantity = (
+    # Require presence explicitly because NULL > 0 evaluates to unknown/NULL.
     F.col('quantity').isNotNull()
+    # Then apply the actual business predicate.
     & (F.col('quantity') > 0)
 )
 
@@ -808,14 +866,17 @@ string_df = (
     function_df
     .withColumn(
         'sku',
+        # SKU is a domain code, so normalize whitespace and case.
         F.upper(F.trim(F.col('sku'))),
     )
     .withColumn(
         'province',
+        # Province codes are standardized to uppercase.
         F.upper(F.trim(F.col('province'))),
     )
     .withColumn(
         'email',
+        # Email comparison/storage commonly benefits from lowercase normalization.
         F.lower(F.trim(F.col('email'))),
     )
     .withColumn(
@@ -826,6 +887,7 @@ string_df = (
         'sku_digits',
         F.regexp_replace(
             F.col('sku'),
+            # Remove every non-digit character from the standardized SKU.
             r'[^0-9]',
             '',
         ),
@@ -833,6 +895,7 @@ string_df = (
     .withColumn(
         'order_sku_key',
         F.concat_ws(
+            # Join multiple column values with a separator.
             '-',
             F.col('order_id'),
             F.col('sku'),
@@ -879,7 +942,9 @@ numeric_df = (
 date_df = numeric_df.withColumn(
     'order_date',
     F.to_date(
+        # Parse the raw text column...
         F.col('order_date_raw'),
+        # ...using the explicit source date pattern.
         'yyyy-MM-dd',
     ),
 )
@@ -925,7 +990,9 @@ date_df = (
 timestamp_df = date_df.withColumn(
     'order_ts',
     F.to_timestamp(
+        # Raw timestamp text from the source.
         F.col('order_ts_raw'),
+        # Explicit source timestamp pattern.
         'yyyy-MM-dd HH:mm:ss',
     ),
 )
@@ -1024,7 +1091,9 @@ with TemporaryDirectory(
 
     nested_df = (
         spark.read
+        # Tell Spark exactly how the nested JSON should be structured.
         .schema(nested_order_schema)
+        # Parse newline-delimited nested JSON.
         .json(str(nested_json_path))
     )
 
@@ -1037,9 +1106,13 @@ with TemporaryDirectory(
 
     nested_df.select(
         'order_id',
+
+        # Dot notation descends into a StructType field.
         F.col(
             'customer.customer_id'
         ).alias('customer_id'),
+
+        # Access another nested field from the same struct.
         F.col(
             'customer.province'
         ).alias('province'),
@@ -1067,6 +1140,8 @@ with TemporaryDirectory(
 
     structured_df = nested_df.select(
         'order_id',
+
+        # struct() packages multiple expressions into one nested Struct column.
         F.struct(
             F.col('customer.customer_id').alias(
                 'customer_id'
@@ -1097,9 +1172,11 @@ with TemporaryDirectory(
         nested_df
         .withColumn(
             'item',
+            # explode() emits one output row per array element.
             F.explode(F.col('items')),
         )
         .select(
+            # order_id repeats once for each exploded order item.
             'order_id',
             F.col('item.sku').alias('sku'),
             F.col('item.quantity').alias(

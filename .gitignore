@@ -162,4 +162,4 @@ data/incremental/*
 # ----------------------------
 .python-version
 _scratch*/
-.pdf
+*.pdf

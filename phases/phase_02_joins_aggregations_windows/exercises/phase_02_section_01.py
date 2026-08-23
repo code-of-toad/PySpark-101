@@ -1,130 +1,179 @@
-from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
+from practice_data import (
+    order_items_df,
+)
+
 """
-Phase 1, Section 1: DataFrame Fundamentals
-------------------------------------------
-1. `SparkSession`
-2. DataFrame creation
-3. schema inference
-4. transformations vs. actions
-5. lazy evaluation
-6. DataFrame immutability
+Phase 2, Section 1: Aggregation Grain
+-------------------------------------
+1. `groupBy()`
+2. `agg()`
+3. how grouped columns define output grain
+4. how aggregation collapses rows
 
 QUESTIONS
 ---------
-Q. Why did Spark infer `quantity` as a string?
-Q. What is the execution difference between `filter()` and `show()`?
-Q. Why does `df` mean unchanged after `df.drop('order_date')`?
-Q. Why is an all-string schema dangerous in a production pipeline?
+Q: What is the grain of `sales_lines_df`?
+Q: Why does `product_sales_df` contain fewer rows?
+Q: What does one row of `order_product_sales_df` represent?
+Q: Why would adding `line_number` to `groupBy()` largely defeat the purpose
+   of aggregating this dataset?
 """
+
+
 # =============================================================================
-# 1.1 Create a DataFrame w/ inferred types
+# 1.1 Create line-level measures
+# ------------------------------
+# INPUT GRAIN: one row PER order line
+#
+# `withColumn()` adds derived values without changing that grain.
 # =============================================================================
-spark = (
-    SparkSession.builder
-    .appName('phase_01_section_01')
-    .master('local[*]')
-    .getOrCreate()
+"""
+INPUT: `order_items_df`
++--------+-----------+----------+--------+----------+------------+              
+|order_id|line_number|product_id|quantity|unit_price|discount_pct|
++--------+-----------+----------+--------+----------+------------+
+|1001    |1          |P001      |2       |12.00     |0.0000      |
+|1001    |2          |P002      |1       |30.00     |0.1000      |
+|1002    |1          |P001      |3       |12.00     |0.0500      |
+|1002    |2          |P003      |1       |50.00     |0.0000      |
+|1003    |1          |P002      |2       |30.00     |0.0000      |
+|1004    |1          |P003      |2       |50.00     |0.1000      |
+|1004    |2          |P004      |4       |8.00      |0.0000      |
+|1005    |1          |P001      |1       |12.00     |0.0000      |
+|1005    |2          |P004      |5       |8.00      |0.0500      |
++--------+-----------+----------+--------+----------+------------+
+"""
+sales_lines_df = (
+    order_items_df
+    .withColumn(
+        'gross_sales',
+        F.col('quantity') * F.col('unit_price')
+    )
+    .withColumn(
+        'discount_amount',
+        F.col('gross_sales') * F.col('discount_pct')
+    )
+    .withColumn(
+        'net_sales',
+        # F.col('quantity') * F.col('unit_price')
+        F.col('gross_sales') - F.col('discount_amount')
+    )
 )
-
-data = [
-    ('1001', ' SKU-001 ', '2', '12.99', '2026-08-18'),
-    ('1002', 'SKU-002', '3', '8.50', '2026-08-18'),
-    ('1003', 'SKU-003', 'abc', '19.99', '2026-08-19'),
-]
-schema = ['order_id', 'sku', 'quantity', 'unit_price', 'order_date']
-df = spark.createDataFrame(data, schema)
-
-# df.show()
+# sales_lines_df.show(truncate=False)
 # =>
 """
-+--------+---------+--------+----------+----------+                             
-|order_id|      sku|quantity|unit_price|order_date|
-+--------+---------+--------+----------+----------+
-|    1001| SKU-001 |       2|     12.99|2026-08-18|
-|    1002|  SKU-002|       3|      8.50|2026-08-18|
-|    1003|  SKU-003|     abc|     19.99|2026-08-19|
-+--------+---------+--------+----------+----------+
-"""
-# df.printSchema()
-# =>
-"""
-root
- |-- order_id: string (nullable = true)
- |-- sku: string (nullable = true)
- |-- quantity: string (nullable = true)
- |-- unit_price: string (nullable = true)
- |-- order_date: string (nullable = true)
+OUTPUT: `sales_lines_df`
++--------+-----------+----------+--------+----------+------------+-----------+---------------+---------+
+|order_id|line_number|product_id|quantity|unit_price|discount_pct|gross_sales|discount_amount|net_sales|
++--------+-----------+----------+--------+----------+------------+-----------+---------------+---------+
+|1001    |1          |P001      |2       |12.00     |0.0000      |24.00      |0.000000       |24.000000|
+|1001    |2          |P002      |1       |30.00     |0.1000      |30.00      |3.000000       |27.000000|
+|1002    |1          |P001      |3       |12.00     |0.0500      |36.00      |1.800000       |34.200000|
+|1002    |2          |P003      |1       |50.00     |0.0000      |50.00      |0.000000       |50.000000|
+|1003    |1          |P002      |2       |30.00     |0.0000      |60.00      |0.000000       |60.000000|
+|1004    |1          |P003      |2       |50.00     |0.1000      |100.00     |10.000000      |90.000000|
+|1004    |2          |P004      |4       |8.00      |0.0000      |32.00      |0.000000       |32.000000|
+|1005    |1          |P001      |1       |12.00     |0.0000      |12.00      |0.000000       |12.000000|
+|1005    |2          |P004      |5       |8.00      |0.0500      |40.00      |2.000000       |38.000000|
++--------+-----------+----------+--------+----------+------------+-----------+---------------+---------+
 """
 
 
 # =============================================================================
-# 1.2 Transformation vs. Action
+# 1.2 Aggregate to product grain
+# ------------------------------
+# INPUT GRAIN: one row PER order line
+# OUTPUT GRAIN: one row PER product
 # =============================================================================
-clean_df = df.filter(
-    F.col('quantity') != 'abc'
+"""
+INPUT: `sales_lines_df`
++--------+-----------+----------+--------+----------+------------+-----------+---------------+---------+
+|order_id|line_number|product_id|quantity|unit_price|discount_pct|gross_sales|discount_amount|net_sales|
++--------+-----------+----------+--------+----------+------------+-----------+---------------+---------+
+|1001    |1          |P001      |2       |12.00     |0.0000      |24.00      |0.000000       |24.000000|
+|1001    |2          |P002      |1       |30.00     |0.1000      |30.00      |3.000000       |27.000000|
+|1002    |1          |P001      |3       |12.00     |0.0500      |36.00      |1.800000       |34.200000|
+|1002    |2          |P003      |1       |50.00     |0.0000      |50.00      |0.000000       |50.000000|
+|1003    |1          |P002      |2       |30.00     |0.0000      |60.00      |0.000000       |60.000000|
+|1004    |1          |P003      |2       |50.00     |0.1000      |100.00     |10.000000      |90.000000|
+|1004    |2          |P004      |4       |8.00      |0.0000      |32.00      |0.000000       |32.000000|
+|1005    |1          |P001      |1       |12.00     |0.0000      |12.00      |0.000000       |12.000000|
+|1005    |2          |P004      |5       |8.00      |0.0500      |40.00      |2.000000       |38.000000|
++--------+-----------+----------+--------+----------+------------+-----------+---------------+---------+
+"""
+product_sales_df = (
+    sales_lines_df
+    .groupBy('product_id')
+    .agg(
+        F.sum('quantity').alias('units_sold'),
+        F.sum('net_sales').alias('net_sales'),
+    )
 )
-
-# clean_df.show()
+# product_sales_df.show(truncate=False)
 # =>
 """
-+--------+---------+--------+----------+----------+                             
-|order_id|      sku|quantity|unit_price|order_date|
-+--------+---------+--------+----------+----------+
-|    1001| SKU-001 |       2|     12.99|2026-08-18|
-|    1002|  SKU-002|       3|      8.50|2026-08-18|
-+--------+---------+--------+----------+----------+
+OUTPUT: `product_sales_df`
++----------+----------+----------+                                              
+|product_id|units_sold|net_sales |
++----------+----------+----------+
+|P001      |6         |70.200000 |
+|P002      |3         |87.000000 |
+|P003      |3         |140.000000|
+|P004      |9         |70.000000 |
++----------+----------+----------+
 """
 
 
 # =============================================================================
-# 1.3 DataFrame immutability
+# 1.3 Aggregate to order-product grain
+# ------------------------------------
+# INPUT GRAIN: one row PER order line
+# OUTPUT GRAIN: one row PER order PER product
 # =============================================================================
-df.drop('order_date')
-# df.show()
+"""
+INPUT: `sales_lines_df`
++--------+-----------+----------+--------+----------+------------+-----------+---------------+---------+
+|order_id|line_number|product_id|quantity|unit_price|discount_pct|gross_sales|discount_amount|net_sales|
++--------+-----------+----------+--------+----------+------------+-----------+---------------+---------+
+|1001    |1          |P001      |2       |12.00     |0.0000      |24.00      |0.000000       |24.000000|
+|1001    |2          |P002      |1       |30.00     |0.1000      |30.00      |3.000000       |27.000000|
+|1002    |1          |P001      |3       |12.00     |0.0500      |36.00      |1.800000       |34.200000|
+|1002    |2          |P003      |1       |50.00     |0.0000      |50.00      |0.000000       |50.000000|
+|1003    |1          |P002      |2       |30.00     |0.0000      |60.00      |0.000000       |60.000000|
+|1004    |1          |P003      |2       |50.00     |0.1000      |100.00     |10.000000      |90.000000|
+|1004    |2          |P004      |4       |8.00      |0.0000      |32.00      |0.000000       |32.000000|
+|1005    |1          |P001      |1       |12.00     |0.0000      |12.00      |0.000000       |12.000000|
+|1005    |2          |P004      |5       |8.00      |0.0500      |40.00      |2.000000       |38.000000|
++--------+-----------+----------+--------+----------+------------+-----------+---------------+---------+
+"""
+order_product_sales_df = (
+    sales_lines_df
+    .groupBy(
+        'order_id',
+        'product_id',
+    )
+    .agg(
+        F.sum('quantity').alias('units_sold'),
+        F.sum('net_sales').alias('net_sales'),
+    )
+)
+# order_product_sales_df.show(truncate=False)
 # =>
 """
-+--------+---------+--------+----------+----------+                             
-|order_id|      sku|quantity|unit_price|order_date|
-+--------+---------+--------+----------+----------+
-|    1001| SKU-001 |       2|     12.99|2026-08-18|
-|    1002|  SKU-002|       3|      8.50|2026-08-18|
-|    1003|  SKU-003|     abc|     19.99|2026-08-19|
-+--------+---------+--------+----------+----------+
+OUTPUT: `order_product_sales_df`
++--------+----------+----------+---------+                                      
+|order_id|product_id|units_sold|net_sales|
++--------+----------+----------+---------+
+|1001    |P001      |2         |24.000000|
+|1001    |P002      |1         |27.000000|
+|1002    |P001      |3         |34.200000|
+|1002    |P003      |1         |50.000000|
+|1003    |P002      |2         |60.000000|
+|1004    |P003      |2         |90.000000|
+|1004    |P004      |4         |32.000000|
+|1005    |P001      |1         |12.000000|
+|1005    |P004      |5         |38.000000|
++--------+----------+----------+---------+
 """
-# df.printSchema()
-# =>
-"""
-root
- |-- order_id: string (nullable = true)
- |-- sku: string (nullable = true)
- |-- quantity: string (nullable = true)
- |-- unit_price: string (nullable = true)
- |-- order_date: string (nullable = true)
-"""
-
-smaller_df = df.drop('order_date')
-# smaller_df.show()
-# =>
-"""
-+--------+---------+--------+----------+                             
-|order_id|      sku|quantity|unit_price|
-+--------+---------+--------+----------+
-|    1001| SKU-001 |       2|     12.99|
-|    1002|  SKU-002|       3|      8.50|
-|    1003|  SKU-003|     abc|     19.99|
-+--------+---------+--------+----------+
-"""
-# smaller_df.printSchema()
-# =>
-"""
-root
- |-- order_id: string (nullable = true)
- |-- sku: string (nullable = true)
- |-- quantity: string (nullable = true)
- |-- unit_price: string (nullable = true)
-"""
-
-
-spark.stop()

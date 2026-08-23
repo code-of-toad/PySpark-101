@@ -7,7 +7,6 @@ This is lecture-only code. It intentionally keeps the examples in one coherent
 retail domain so that each API can be understood in terms of grain, keys, and
 data-engineering correctness.
 '''
-
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -75,12 +74,12 @@ spark = (
 # store_id is a foreign key to the store entity.
 # customer_id is retained as a transaction attribute for this phase.
 orders_schema = StructType([
-    StructField('order_id', LongType(), nullable=False),
-    StructField('store_id', StringType(), nullable=False),
-    StructField('customer_id', StringType(), nullable=True),
-    StructField('order_date', DateType(), nullable=False),
-    StructField('order_ts', TimestampType(), nullable=False),
-    StructField('order_status', StringType(), nullable=False),
+    StructField('order_id',     LongType(),      nullable=False),
+    StructField('store_id',     StringType(),    nullable=False),
+    StructField('customer_id',  StringType(),    nullable=True),
+    StructField('order_date',   DateType(),      nullable=False),
+    StructField('order_ts',     TimestampType(), nullable=False),
+    StructField('order_status', StringType(),    nullable=False),
 ])
 
 orders_df = spark.createDataFrame(
@@ -142,12 +141,12 @@ orders_df = spark.createDataFrame(
 #
 # This is finer grain than orders_df. One order can therefore have many lines.
 order_items_schema = StructType([
-    StructField('order_id', LongType(), nullable=False),
-    StructField('line_number', IntegerType(), nullable=False),
-    StructField('product_id', StringType(), nullable=False),
-    StructField('quantity', IntegerType(), nullable=False),
-    StructField('unit_price', DecimalType(12, 2), nullable=False),
-    StructField('discount_pct', DecimalType(5, 4), nullable=False),
+    StructField('order_id',     LongType(),         nullable=False),
+    StructField('line_number',  IntegerType(),      nullable=False),
+    StructField('product_id',   StringType(),       nullable=False),
+    StructField('quantity',     IntegerType(),      nullable=False),
+    StructField('unit_price',   DecimalType(12, 2), nullable=False),
+    StructField('discount_pct', DecimalType(5, 4),  nullable=False),
 ])
 
 order_items_df = spark.createDataFrame(
@@ -179,10 +178,10 @@ order_items_df = spark.createDataFrame(
 # tags is included so that explode can later demonstrate a deliberate grain
 # change from product grain to product-tag grain.
 products_schema = StructType([
-    StructField('product_id', StringType(), nullable=False),
-    StructField('product_name', StringType(), nullable=False),
-    StructField('category', StringType(), nullable=False),
-    StructField('unit_cost', DecimalType(12, 2), nullable=False),
+    StructField('product_id',   StringType(),       nullable=False),
+    StructField('product_name', StringType(),       nullable=False),
+    StructField('category',     StringType(),       nullable=False),
+    StructField('unit_cost',    DecimalType(12, 2), nullable=False),
     StructField(
         'tags',
         ArrayType(
@@ -238,9 +237,9 @@ products_df = spark.createDataFrame(
 # BUSINESS KEY:
 #     store_id
 stores_schema = StructType([
-    StructField('store_id', StringType(), nullable=False),
+    StructField('store_id',   StringType(), nullable=False),
     StructField('store_name', StringType(), nullable=False),
-    StructField('province', StringType(), nullable=False),
+    StructField('province',   StringType(), nullable=False),
 ])
 
 stores_df = spark.createDataFrame(
@@ -267,13 +266,13 @@ stores_df = spark.createDataFrame(
 # multiple arrivals for the same target grain. Later, a window chooses the
 # latest record deterministically.
 inventory_schema = StructType([
-    StructField('snapshot_date', DateType(), nullable=False),
-    StructField('snapshot_ts', TimestampType(), nullable=False),
-    StructField('ingestion_id', LongType(), nullable=False),
-    StructField('store_id', StringType(), nullable=False),
-    StructField('product_id', StringType(), nullable=False),
-    StructField('on_hand_quantity', IntegerType(), nullable=False),
-    StructField('reorder_point', IntegerType(), nullable=False),
+    StructField('snapshot_date',    DateType(),      nullable=False),
+    StructField('snapshot_ts',      TimestampType(), nullable=False),
+    StructField('ingestion_id',     LongType(),      nullable=False),
+    StructField('store_id',         StringType(),    nullable=False),
+    StructField('product_id',       StringType(),    nullable=False),
+    StructField('on_hand_quantity', IntegerType(),   nullable=False),
+    StructField('reorder_point',    IntegerType(),   nullable=False),
 ])
 
 inventory_df = spark.createDataFrame(
@@ -341,10 +340,7 @@ inventory_df = spark.createDataFrame(
 # 1.6 Two helper patterns for key validation
 # -----------------------------------------------------------------------------
 
-def find_duplicate_keys(
-    df: DataFrame,
-    keys: list[str],
-) -> DataFrame:
+def find_duplicate_keys(df: DataFrame, keys: list[str]) -> DataFrame:
     # A uniqueness check groups by the claimed key and exposes key groups that
     # contain more than one row. A non-empty result disproves uniqueness.
     return (
@@ -374,10 +370,7 @@ def find_orphans(
 # Validate keys BEFORE depending on them in joins.
 #
 # These result DataFrames should be empty for the intended contracts.
-duplicate_orders_df = find_duplicate_keys(
-    orders_df,
-    ['order_id'],
-)
+duplicate_orders_df = find_duplicate_key(orders_df, ['order_id'])
 
 duplicate_order_lines_df = find_duplicate_keys(
     order_items_df,
@@ -644,8 +637,8 @@ invalid_product_items_df = order_item_measures_df.join(
 # The complete relationship key is therefore:
 #     (store_id, product_id)
 store_product_targets_schema = StructType([
-    StructField('store_id', StringType(), nullable=False),
-    StructField('product_id', StringType(), nullable=False),
+    StructField('store_id',       StringType(),  nullable=False),
+    StructField('product_id',     StringType(),  nullable=False),
     StructField('target_on_hand', IntegerType(), nullable=False),
 ])
 
@@ -737,8 +730,8 @@ date_store_scaffold_df = scaffold_dates_df.crossJoin(
 #
 # Both sides can repeat product_id, so a direct product_id join is many-to-many.
 product_promotions_schema = StructType([
-    StructField('promotion_id', StringType(), nullable=False),
-    StructField('product_id', StringType(), nullable=False),
+    StructField('promotion_id',   StringType(), nullable=False),
+    StructField('product_id',     StringType(), nullable=False),
     StructField('promotion_type', StringType(), nullable=False),
 ])
 
@@ -1091,9 +1084,9 @@ latest_inventory_df = (
 # -----------------------------------------------------------------------------
 
 duplicate_event_schema = StructType([
-    StructField('event_id', StringType(), nullable=False),
-    StructField('event_ts', TimestampType(), nullable=False),
-    StructField('payload_version', IntegerType(), nullable=False),
+    StructField('event_id',        StringType(),    nullable=False),
+    StructField('event_ts',        TimestampType(), nullable=False),
+    StructField('payload_version', IntegerType(),   nullable=False),
 ])
 
 duplicate_events_df = spark.createDataFrame(
@@ -1169,7 +1162,7 @@ batch_a_df = spark.createDataFrame(
     ],
     schema=StructType([
         StructField('record_id', StringType(), nullable=False),
-        StructField('status', StringType(), nullable=False),
+        StructField('status',    StringType(), nullable=False),
     ]),
 )
 
@@ -1179,7 +1172,7 @@ batch_b_reordered_df = spark.createDataFrame(
         ('FAILED', 'R004'),
     ],
     schema=StructType([
-        StructField('status', StringType(), nullable=False),
+        StructField('status',    StringType(), nullable=False),
         StructField('record_id', StringType(), nullable=False),
     ]),
 )
@@ -1203,8 +1196,8 @@ batch_c_with_extra_column_df = spark.createDataFrame(
         ('R005', 'READY', 'API'),
     ],
     schema=StructType([
-        StructField('record_id', StringType(), nullable=False),
-        StructField('status', StringType(), nullable=False),
+        StructField('record_id',     StringType(), nullable=False),
+        StructField('status',        StringType(), nullable=False),
         StructField('source_system', StringType(), nullable=False),
     ]),
 )
@@ -1331,7 +1324,7 @@ store_sales_unpivot_df = store_sales_pivot_df.unpivot(
 # every run. That can change existing keys when the input changes.
 product_key_map_schema = StructType([
     StructField('product_key', IntegerType(), nullable=False),
-    StructField('product_id', StringType(), nullable=False),
+    StructField('product_id',  StringType(),  nullable=False),
 ])
 
 product_key_map_df = spark.createDataFrame(
@@ -1346,7 +1339,7 @@ product_key_map_df = spark.createDataFrame(
 
 store_key_map_schema = StructType([
     StructField('store_key', IntegerType(), nullable=False),
-    StructField('store_id', StringType(), nullable=False),
+    StructField('store_id',  StringType(),  nullable=False),
 ])
 
 store_key_map_df = spark.createDataFrame(

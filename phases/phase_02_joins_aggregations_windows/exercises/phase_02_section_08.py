@@ -19,7 +19,7 @@ Phase 2, Section 8: `groupBy` vs. `Window.partitionBy`
 
 QUESTIONS
 =========
-Q: What does one row represent after the groupBy()?
+Q: What does one row represent after the `groupBy()`?
 Q: What does one row represent after the window?
 Q: Why can both techniques compute store totals but produce different shapes?
 Q: When would you prefer the window version?

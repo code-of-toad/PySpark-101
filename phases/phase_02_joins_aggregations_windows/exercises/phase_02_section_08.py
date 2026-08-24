@@ -207,9 +207,9 @@ OUTPUT: `sales_with_store_total_df`
 """
 
 # Compare counts:
-print(f'Source rows: {sales_enriched_df.count()}')
-print(f'groupBy rows: {store_totals_df.count()}')
-print(f'Window rows: {sales_with_store_total_df.count()}')
+# print(f'Source rows: {sales_enriched_df.count()}')
+# print(f'groupBy rows: {store_totals_df.count()}')
+# print(f'Window rows: {sales_with_store_total_df.count()}')
 # =>
 """
 Source rows: 9

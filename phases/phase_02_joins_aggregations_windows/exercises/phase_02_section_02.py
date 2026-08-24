@@ -175,7 +175,7 @@ conditional_metrics_df = (
         ).alias('large_line_units'),
     )
 )
-conditional_metrics_df.show(truncate=False)
+# conditional_metrics_df.show(truncate=False)
 # =>
 """
 OUTPUT: `conditional_metrics_df`

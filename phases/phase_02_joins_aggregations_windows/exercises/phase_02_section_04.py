@@ -3,28 +3,15 @@ from datetime import date
 
 from pyspark.sql import functions as F
 from pyspark.sql.types import (
-    DateType,
     DecimalType,
-    IntegerType,
-    LongType,
     StringType,
     StructType,
     StructField,
-    TimestampType,
 )
 
 from practice_data import (
     spark,
-    orders_schema,
-    orders_df,
-    order_items_schema,
-    order_items_df,
-    products_schema,
-    products_df,
-    stores_schema,
     stores_df,
-    inventory_schema,
-    inventory_df,
 )
 from phase_02_section_01 import (
     sales_lines_df,

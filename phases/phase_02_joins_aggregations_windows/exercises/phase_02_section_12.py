@@ -1,14 +1,4 @@
 from pyspark.sql import functions as F
-from pyspark.sql.types import (
-    DateType,
-    DecimalType,
-    IntegerType,
-    LongType,
-    StringType,
-    StructType,
-    StructField,
-    TimestampType,
-)
 
 from practice_data import (
     spark,
@@ -33,8 +23,6 @@ Q: Why can exploding arrays before a sum duplicate parent-level measures?
 Q: Why is long-form data often easier for generic analytical processing?
 Q: Why can unpivot increase row count?
 """
-
-
 
 
 # =============================================================================

@@ -479,5 +479,14 @@ date_store_scaffold_df = dates_df.crossJoin(
 # =>
 """
 OUTPUT: `date_store_scaffold_df`
-
++-------------+--------+------------------+--------+                            
+|calendar_date|store_id|store_name        |province|
++-------------+--------+------------------+--------+
+|2026-01-05   |S01     |Toronto Central   |ON      |
+|2026-01-05   |S02     |Mississauga West  |ON      |
+|2026-01-05   |S03     |Vancouver Downtown|BC      |
+|2026-01-06   |S01     |Toronto Central   |ON      |
+|2026-01-06   |S02     |Mississauga West  |ON      |
+|2026-01-06   |S03     |Vancouver Downtown|BC      |
++-------------+--------+------------------+--------+
 """

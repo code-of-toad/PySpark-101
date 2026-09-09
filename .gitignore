@@ -118,6 +118,7 @@ data/rejected/*
 data/processed/*
 data/output/*
 data/incremental/*
+data/*
 
 # Preserve directory placeholders if used
 !data/raw/.gitkeep

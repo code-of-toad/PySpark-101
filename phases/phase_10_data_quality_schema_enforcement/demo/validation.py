@@ -1,8 +1,17 @@
+from collections.abc import Callable
 from datetime import date
 
+from pyspark.sql import Column
+from pyspark.sql import DataFrame
+from pyspark.sql import Row
 from pyspark.sql import functions as F
-from pyspark.sql import DataFrame, Column, Row
-from pyspark.sql.types import StringType, StructType
+from pyspark.sql.types import StringType
+from pyspark.sql.types import StructType
+
+
+# A rule stores a function that CREATES a Column later, after Spark is active.
+# This avoids constructing PySpark Column objects while modules are importing.
+ValidationRule = tuple[str, Callable[[], Column]]
 
 
 def validate_schema(
@@ -13,7 +22,7 @@ def validate_schema(
 ) -> None:
     """Validate required columns and Spark data types."""
 
-    # Schema metadata is available without scanning every source row.
+    # Schema metadata can be inspected without scanning every source row.
     expected_fields = {
         field.name: field.dataType
         for field in expected_schema.fields
@@ -39,8 +48,14 @@ def validate_schema(
             expected_fields[column_name],
             actual_fields[column_name],
         )
-        for column_name in expected_fields.keys() & actual_fields.keys() 
-        if expected_fields[column_name] != actual_fields[column_name]
+        for column_name in (
+            expected_fields.keys()
+            & actual_fields.keys()
+        )
+        if (
+            expected_fields[column_name]
+            != actual_fields[column_name]
+        )
     }
 
     if missing_columns:
@@ -80,31 +95,30 @@ def missing_string(
 
 def add_rejection_reasons(
     df: DataFrame,
-    rules: list[tuple[str, Column]],
+    rules: list[ValidationRule],
 ) -> DataFrame:
     """Attach every row-level rejection reason that applies."""
 
-    # Every rule follows the same contract:
-    #
-    #     (rejection_reason, invalid_condition)
+    # IMPORTANT:
+    # The rule-builder function is invoked HERE rather than when rules.py is
+    # imported. By this point the SparkSession is already active.
     reason_columns = [
         F.when(
-            invalid_condition,
+            invalid_condition_builder(),
             F.lit(reason),
         )
-        for reason, invalid_condition in rules
+        for reason, invalid_condition_builder in rules
     ]
 
     return df.withColumn(
         'rejection_reasons',
 
-        # Remove NULL placeholders so the array contains only failed rules.
+        # Keep only the reasons whose invalid conditions evaluated to True.
         F.filter(
             F.array(
                 *reason_columns
             ),
             lambda reason: reason.isNotNull(),
-            Column
         ),
     )
 
@@ -121,7 +135,7 @@ def append_reason(
         F.when(
             invalid_condition,
 
-            # array_union() also prevents an accidental duplicate reason.
+            # array_union() prevents an accidental duplicate reason.
             F.array_union(
                 F.col('rejection_reasons'),
                 F.array(
@@ -143,12 +157,11 @@ def _usable_key_condition(
     condition = F.lit(True)
 
     for column_name in key_columns:
-        column_condition = F.col(
-            column_name
-        ).isNotNull()
+        column_condition = (
+            F.col(column_name).isNotNull()
+        )
 
-        # Blank strings are missing-key defects, so uniqueness validation should
-        # not double-label them as duplicate business keys.
+        # Blank strings are missing-key defects, not uniqueness defects.
         if isinstance(
             df.schema[column_name].dataType,
             StringType,
@@ -180,7 +193,7 @@ def find_duplicate_keys(
     return (
         df
 
-        # Missing key components are owned by required-field validation.
+        # Missing key components are handled by required-field validation.
         .filter(
             _usable_key_condition(
                 df,
@@ -234,8 +247,8 @@ def find_exact_duplicate_rows(
     return (
         df
 
-        # Group by every source column to distinguish exact duplicates from
-        # records that merely share the same PK or composite key.
+        # Grouping by every source column distinguishes exact duplicates from
+        # different records that merely share a business key.
         .groupBy(
             *df.columns
         )
@@ -261,7 +274,7 @@ def add_duplicate_key_reason(
             key_columns,
         )
 
-        # Add a temporary marker so a left join can preserve every source row.
+        # Temporary marker lets the left join preserve every source row.
         .withColumn(
             '_duplicate_key',
             F.lit(True),
@@ -277,7 +290,6 @@ def add_duplicate_key_reason(
             how='left',
         )
 
-        # Non-matching keys become False rather than NULL.
         .withColumn(
             '_duplicate_key',
             F.coalesce(
@@ -315,7 +327,7 @@ def _assert_parent_key_unique(
     duplicate_parent_exists = (
         duplicate_parent_keys_df
 
-        # Only enough data is materialized to answer whether any defect exists.
+        # We only need to know whether at least one violation exists.
         .limit(1)
 
         .count()
@@ -336,7 +348,7 @@ def add_orphan_customer_reason(
 ) -> DataFrame:
     """Mark non-null customer IDs having no matching parent customer."""
 
-    # Referential integrity is trustworthy only when the parent key is unique.
+    # Referential-integrity checks assume the parent key is unique.
     _assert_parent_key_unique(
         customers_df,
         key_columns=['customer_id'],
@@ -346,7 +358,7 @@ def add_orphan_customer_reason(
     parent_customer_keys_df = (
         customers_df
 
-        # Only the relationship key is needed for an existence check.
+        # Only the relationship key is required for existence checking.
         .select(
             'customer_id'
         )
@@ -370,7 +382,7 @@ def add_orphan_customer_reason(
     result_df = (
         validated_orders_df
 
-        # Preserve every child row while attaching parent-existence metadata.
+        # Preserve every order while attaching parent-existence metadata.
         .join(
             parent_customer_keys_df,
             on='customer_id',
@@ -417,12 +429,12 @@ def split_accepted_rejected(
     accepted_df = (
         validated_df
 
-        # An empty rejection array means the record passed every required rule.
+        # An empty reason array means every required validation passed.
         .filter(
             F.size('rejection_reasons') == 0
         )
 
-        # Business transformations should not depend on DQ diagnostics.
+        # Downstream business logic should not depend on DQ diagnostics.
         .drop(
             'rejection_reasons'
         )
@@ -437,7 +449,10 @@ def split_accepted_rejected(
         )
     )
 
-    return accepted_df, rejected_df
+    return (
+        accepted_df,
+        rejected_df,
+    )
 
 
 def build_quarantine(
@@ -450,13 +465,13 @@ def build_quarantine(
     return (
         rejected_df
 
-        # Preserve which source contract produced this quarantine record.
+        # Record which source contract produced this quarantine row.
         .withColumn(
             'source_dataset',
             F.lit(source_dataset),
         )
 
-        # Inject run metadata instead of relying on current_date().
+        # Inject the run date instead of depending on current_date().
         .withColumn(
             'validation_run_date',
             F.lit(
@@ -469,7 +484,7 @@ def build_quarantine(
 def _validation_counts_aggregation(
     validated_df: DataFrame,
 ) -> DataFrame:
-    """Build the common row-count aggregation used by metrics and assertions."""
+    """Build common row-count metrics."""
 
     return validated_df.agg(
         F.count(
@@ -562,7 +577,7 @@ def build_rejection_reason_counts(
     return (
         rejected_df
 
-        # One rejected row may contribute multiple reason occurrences.
+        # One rejected row can contribute multiple failure reasons.
         .select(
             F.explode(
                 'rejection_reasons'

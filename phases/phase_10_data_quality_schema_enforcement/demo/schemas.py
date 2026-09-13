@@ -6,7 +6,7 @@ from pyspark.sql.types import StructField
 from pyspark.sql.types import StructType
 
 
-# Incoming schemas intentionally allow NULL values so malformed business records
+# Incoming schemas intentionally allow NULL values so invalid business records
 # can reach the DQ layer and receive explicit rejection reasons.
 
 ORDERS_SCHEMA = StructType(

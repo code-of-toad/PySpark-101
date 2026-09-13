@@ -4,7 +4,7 @@ from decimal import Decimal
 from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
 
-from phases.phase_10_data_quality_schema_enforcement.demo.rules import INVENTORY_RULES
+from rules import INVENTORY_RULES
 from rules import ORDER_RULES
 from schemas import CUSTOMERS_SCHEMA
 from schemas import INVENTORY_SCHEMA
@@ -29,19 +29,8 @@ def build_seed_data(
 ) -> tuple[DataFrame, DataFrame, DataFrame]:
     """Create deterministic retail inputs containing deliberate DQ failures."""
 
-    # -------------------------------------------------------------------------
-    # orders_df
-    #
-    # Grain:
-    #     one row per order_id
-    #
-    # PK:
-    #     order_id
-    #
-    # FK:
-    #     customer_id -> customers.customer_id
-    # -------------------------------------------------------------------------
-
+    # orders_df grain:
+    # one row per order_id.
     orders_df = spark.createDataFrame(
         [
             # Valid.
@@ -53,7 +42,7 @@ def build_seed_data(
                 Decimal('125.00'),
             ),
 
-            # Domain failure.
+            # Invalid domain.
             (
                 'O002',
                 'C002',
@@ -62,7 +51,7 @@ def build_seed_data(
                 Decimal('80.00'),
             ),
 
-            # Referential-integrity failure.
+            # Orphan foreign key.
             (
                 'O003',
                 'C999',
@@ -71,7 +60,7 @@ def build_seed_data(
                 Decimal('45.00'),
             ),
 
-            # Range failure.
+            # Invalid range.
             (
                 'O004',
                 'C003',
@@ -80,7 +69,7 @@ def build_seed_data(
                 Decimal('-20.00'),
             ),
 
-            # Duplicate PK with conflicting payload values.
+            # Duplicate PK with conflicting values.
             (
                 'O005',
                 'C004',
@@ -96,7 +85,7 @@ def build_seed_data(
                 Decimal('15.00'),
             ),
 
-            # Exact duplicate pair. These rows are also duplicate PK rows.
+            # Exact duplicate pair; also duplicate PK rows.
             (
                 'O006',
                 'C004',
@@ -121,7 +110,7 @@ def build_seed_data(
                 Decimal('12.00'),
             ),
 
-            # Required-field failure.
+            # Missing foreign key.
             (
                 'O008',
                 None,
@@ -142,16 +131,8 @@ def build_seed_data(
         schema=ORDERS_SCHEMA,
     )
 
-    # -------------------------------------------------------------------------
-    # customers_df
-    #
-    # Grain:
-    #     one row per customer_id
-    #
-    # Parent key:
-    #     customer_id
-    # -------------------------------------------------------------------------
-
+    # customers_df grain:
+    # one row per customer_id.
     customers_df = spark.createDataFrame(
         [
             ('C001', 'Alice Wong', 'ON'),
@@ -162,16 +143,8 @@ def build_seed_data(
         schema=CUSTOMERS_SCHEMA,
     )
 
-    # -------------------------------------------------------------------------
-    # inventory_df
-    #
-    # Grain:
-    #     one row per snapshot_date + store_id + product_id
-    #
-    # Composite key:
-    #     snapshot_date + store_id + product_id
-    # -------------------------------------------------------------------------
-
+    # inventory_df grain:
+    # one row per snapshot_date + store_id + product_id.
     inventory_df = spark.createDataFrame(
         [
             # Valid.
@@ -204,7 +177,7 @@ def build_seed_data(
                 8,
             ),
 
-            # Range failure.
+            # Invalid range.
             (
                 date(2026, 9, 5),
                 'S003',
@@ -226,10 +199,9 @@ def validate_orders(
     orders_df: DataFrame,
     customers_df: DataFrame,
 ) -> DataFrame:
-    """
-    Run the complete orders data-quality contract.
-    """
-    # Fail fast when the physical structure does not match the contract.
+    """Run the complete orders data-quality contract."""
+
+    # Structural validation.
     validate_schema(
         orders_df,
         expected_schema=ORDERS_SCHEMA,
@@ -242,20 +214,20 @@ def validate_orders(
         label='customers_df',
     )
 
-    # Evaluate row-local required, domain, range, and business rules.
+    # Row-level required/domain/range/business-rule validation.
     validated_df = add_rejection_reasons(
         orders_df,
         rules=ORDER_RULES,
     )
 
-    # Enforce the declared one-row-per-order_id grain.
+    # Dataset-level PK uniqueness.
     validated_df = add_duplicate_key_reason(
         validated_df,
         key_columns=['order_id'],
         rejection_reason='DUPLICATE_ORDER_ID',
     )
 
-    # Enforce orders.customer_id -> customers.customer_id.
+    # Cross-dataset referential integrity.
     validated_df = add_orphan_customer_reason(
         validated_df,
         customers_df,
@@ -267,22 +239,22 @@ def validate_orders(
 def validate_inventory(
     inventory_df: DataFrame,
 ) -> DataFrame:
-    """
-    Run the complete inventory data-quality contract.
-    """
+    """Run the complete inventory data-quality contract."""
+
+    # Structural validation.
     validate_schema(
         inventory_df,
         expected_schema=INVENTORY_SCHEMA,
         label='inventory_df',
     )
 
-    # Evaluate row-local required and range rules.
+    # Row-level required/range validation.
     validated_df = add_rejection_reasons(
         inventory_df,
         rules=INVENTORY_RULES,
     )
 
-    # Enforce the full grain-defining composite key.
+    # Dataset-level composite-key uniqueness.
     validated_df = add_duplicate_key_reason(
         validated_df,
         key_columns=[
@@ -300,39 +272,43 @@ def run_pipeline(
     spark: SparkSession,
     validation_run_date: date,
 ) -> dict[str, DataFrame]:
-    """
-    Run the complete separated Phase 10 demonstration.
-    """
+    """Run the complete separated Phase 10 demonstration."""
+
     (
         orders_df,
         customers_df,
         inventory_df,
-    ) = build_seed_data(spark)
+    ) = build_seed_data(
+        spark
+    )
 
-    # =========================================================================
-    # 1. VALIDATE ORDERS
-    # =========================================================================
+    # -------------------------------------------------------------------------
+    # Orders quality layer.
+    # -------------------------------------------------------------------------
 
-    validated_orders_df = validate_orders(orders_df, customers_df)
+    validated_orders_df = validate_orders(
+        orders_df,
+        customers_df,
+    )
 
     (
         accepted_orders_df,
         rejected_orders_df,
-    ) = split_accepted_rejected(validated_orders_df)
+    ) = split_accepted_rejected(
+        validated_orders_df
+    )
 
-    # Only accepted data is permitted into downstream business logic.
+    # Only quality-approved rows enter downstream business logic.
     transformed_orders_df = transform_accepted_orders(
         accepted_orders_df
     )
 
-    # Rejected records are retained with reasons and operational metadata.
     orders_quarantine_df = build_quarantine(
         rejected_orders_df,
         source_dataset='orders',
         validation_run_date=validation_run_date,
     )
 
-    # Operational DQ observability.
     orders_validation_summary_df = build_validation_summary(
         validated_orders_df,
         dataset_name='orders',
@@ -342,19 +318,25 @@ def run_pipeline(
         rejected_orders_df
     )
 
-    # Correctness invariant: no source row silently disappears.
-    assert_validation_reconciles(validated_orders_df)
+    # Prove that validation did not silently lose or double-classify rows.
+    assert_validation_reconciles(
+        validated_orders_df
+    )
 
-    # =========================================================================
-    # 2. VALIDATE INVENTORY
-    # =========================================================================
+    # -------------------------------------------------------------------------
+    # Inventory quality layer.
+    # -------------------------------------------------------------------------
 
-    validated_inventory_df = validate_inventory(inventory_df)
+    validated_inventory_df = validate_inventory(
+        inventory_df
+    )
 
     (
         accepted_inventory_df,
         rejected_inventory_df,
-    ) = split_accepted_rejected(validated_inventory_df)
+    ) = split_accepted_rejected(
+        validated_inventory_df
+    )
 
     inventory_quarantine_df = build_quarantine(
         rejected_inventory_df,
@@ -371,13 +353,14 @@ def run_pipeline(
         rejected_inventory_df
     )
 
-    assert_validation_reconciles(validated_inventory_df)
+    assert_validation_reconciles(
+        validated_inventory_df
+    )
 
-    # =========================================================================
-    # 3. DUPLICATE DIAGNOSTICS
-    # =========================================================================
+    # -------------------------------------------------------------------------
+    # Duplicate diagnostics.
+    # -------------------------------------------------------------------------
 
-    # Business-key duplicates show grain violations.
     duplicate_order_keys_df = find_duplicate_keys(
         orders_df,
         key_columns=['order_id'],
@@ -388,9 +371,9 @@ def run_pipeline(
         key_columns=['order_id'],
     )
 
-    # Exact duplicates explain whether repeated PKs are byte-for-byte-equivalent
-    # business records or conflicting records sharing the same business key.
-    exact_duplicate_orders_df = find_exact_duplicate_rows(orders_df)
+    exact_duplicate_orders_df = find_exact_duplicate_rows(
+        orders_df
+    )
 
     duplicate_inventory_keys_df = find_duplicate_keys(
         inventory_df,
@@ -410,7 +393,7 @@ def run_pipeline(
         ],
     )
 
-    # Named outputs make the pipeline easy to inspect and test in Phase 11.
+    # Named outputs are convenient for inspection now and automated tests later.
     return {
         'validated_orders': validated_orders_df,
         'accepted_orders': accepted_orders_df,
@@ -434,19 +417,24 @@ def run_pipeline(
 
 
 if __name__ == '__main__':
-    print('ay yoooooooooooooooooooooooo')
+    # Spark becomes active HERE, after Python has completed module imports.
     spark = (
-        SparkSession.builder
+        SparkSession
+        .builder
         .appName('phase-10-data-quality')
         .getOrCreate()
     )
 
     outputs = run_pipeline(
         spark,
-        validation_run_date=date(2026, 9, 10),
+        validation_run_date=date(
+            2026,
+            9,
+            13,
+        ),
     )
 
-    # In a production application, writer functions would persist these outputs.
+    # In production, writer functions would normally persist these outputs.
     for output_name in [
         'validated_orders',
         'accepted_orders',
@@ -467,7 +455,14 @@ if __name__ == '__main__':
         'duplicate_inventory_keys',
         'duplicate_inventory_rows',
     ]:
-        print(f'\n=== {output_name.upper()} ===')
-        outputs[output_name].show(truncate=False)
+        print(
+            f'\n=== {output_name.upper()} ==='
+        )
+
+        outputs[
+            output_name
+        ].show(
+            truncate=False
+        )
 
     spark.stop()
